@@ -1,0 +1,446 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Database: Neon PostgreSQL (see DATABASE_URL / DIRECT_URL in .env)
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  ADMIN
+  SENIOR_MANAGER
+  HR_RECRUITER
+  EMPLOYEE
+}
+
+enum EmploymentStatus {
+  ACTIVE
+  ON_LEAVE
+  TERMINATED
+  PROBATION
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum LeaveType {
+  ANNUAL
+  SICK
+  CASUAL
+  MATERNITY
+  PATERNITY
+  UNPAID
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  HALF_DAY
+  REMOTE
+  ON_LEAVE
+}
+
+enum PayrollStatus {
+  DRAFT
+  PROCESSED
+  PAID
+}
+
+enum CandidateStatus {
+  NEW
+  SCREENING
+  SHORTLISTED
+  INTERVIEW
+  OFFERED
+  HIRED
+  REJECTED
+}
+
+enum GoalStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  logoUrl   String?
+  timezone  String   @default("UTC")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users       User[]
+  departments Department[]
+  employees   Employee[]
+  holidays    Holiday[]
+  jobPosts    JobPost[]
+}
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  supabaseId     String?  @unique
+  role           UserRole @default(EMPLOYEE)
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  employee     Employee?
+  chatMessages ChatMessage[]
+
+  @@index([organizationId])
+  @@index([role])
+}
+
+model Department {
+  id             String   @id @default(cuid())
+  name           String
+  code           String?
+  description    String?
+  parentId       String?
+  organizationId String
+  managerId      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  parent       Department?  @relation("DeptHierarchy", fields: [parentId], references: [id])
+  children     Department[] @relation("DeptHierarchy")
+  employees    Employee[]
+  designations Designation[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+}
+
+model Designation {
+  id           String   @id @default(cuid())
+  title        String
+  level        Int      @default(1)
+  departmentId String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  employees  Employee[]
+
+  @@index([departmentId])
+}
+
+model Employee {
+  id             String           @id @default(cuid())
+  employeeCode   String
+  firstName      String
+  lastName       String
+  email          String
+  phone          String?
+  avatarUrl      String?
+  dateOfBirth    DateTime?
+  dateOfJoining  DateTime
+  status         EmploymentStatus @default(ACTIVE)
+  organizationId String
+  departmentId   String?
+  designationId  String?
+  managerId      String?
+  userId         String?          @unique
+  address        String?
+  city           String?
+  country        String?
+  panNumber      String?
+  uan            String?
+  pfNumber       String?
+  paymentMode    String?          @default("Bank Transfer")
+  businessUnit   String?
+  subDepartment  String?
+  bio            String?          @db.Text
+  education      Json?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  department     Department?     @relation(fields: [departmentId], references: [id])
+  designation    Designation?    @relation(fields: [designationId], references: [id])
+  manager        Employee?       @relation("EmployeeManager", fields: [managerId], references: [id])
+  directReports  Employee[]      @relation("EmployeeManager")
+  user           User?           @relation(fields: [userId], references: [id])
+  documents      EmployeeDocument[]
+  attendances    Attendance[]
+  leaveRequests  LeaveRequest[]
+  salaryStructure SalaryStructure?
+  payslips       Payslip[]
+  goals          Goal[]
+  reviews        PerformanceReview[] @relation("ReviewEmployee")
+  reviewsGiven   PerformanceReview[] @relation("ReviewManager")
+  announcements  AnnouncementRead[]
+
+  @@unique([organizationId, employeeCode])
+  @@unique([organizationId, email])
+  @@index([organizationId])
+  @@index([departmentId])
+  @@index([status])
+}
+
+model EmployeeDocument {
+  id         String   @id @default(cuid())
+  employeeId String
+  name       String
+  type       String
+  fileUrl    String
+  fileSize   Int?
+  uploadedAt DateTime @default(now())
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+}
+
+model Attendance {
+  id         String           @id @default(cuid())
+  employeeId String
+  date       DateTime         @db.Date
+  checkIn    DateTime?
+  checkOut   DateTime?
+  status     AttendanceStatus @default(PRESENT)
+  notes      String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, date])
+  @@index([employeeId, date])
+}
+
+model LeaveRequest {
+  id          String      @id @default(cuid())
+  employeeId  String
+  type        LeaveType
+  startDate   DateTime    @db.Date
+  endDate     DateTime    @db.Date
+  reason      String?
+  status      LeaveStatus @default(PENDING)
+  approvedBy  String?
+  approvedAt  DateTime?
+  rejectReason String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@index([status])
+}
+
+model Holiday {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  date           DateTime @db.Date
+  isOptional     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, date])
+}
+
+model SalaryStructure {
+  id            String   @id @default(cuid())
+  employeeId    String   @unique
+  baseSalary    Decimal  @db.Decimal(12, 2)
+  hra           Decimal  @default(0) @db.Decimal(12, 2)
+  allowances    Decimal  @default(0) @db.Decimal(12, 2)
+  deductions    Decimal  @default(0) @db.Decimal(12, 2)
+  taxRate       Decimal  @default(0) @db.Decimal(5, 2)
+  currency      String   @default("INR")
+  effectiveFrom DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+}
+
+model Payslip {
+  id              String        @id @default(cuid())
+  employeeId      String
+  month           Int
+  year            Int
+  baseSalary      Decimal       @db.Decimal(12, 2)
+  bonuses         Decimal       @default(0) @db.Decimal(12, 2)
+  deductions      Decimal       @default(0) @db.Decimal(12, 2)
+  netPay          Decimal       @db.Decimal(12, 2)
+  workingDays     Int           @default(30)
+  payableDays     Int           @default(30)
+  lossOfPayDays   Int           @default(0)
+  earningsDetail  Json?
+  status          PayrollStatus @default(DRAFT)
+  processedAt     DateTime?
+  createdAt       DateTime      @default(now())
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, month, year])
+  @@index([employeeId])
+}
+
+model Goal {
+  id          String     @id @default(cuid())
+  employeeId  String
+  title       String
+  description String?
+  targetDate  DateTime?
+  progress    Int        @default(0)
+  status      GoalStatus @default(NOT_STARTED)
+  kpiMetric   String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+}
+
+model PerformanceReview {
+  id           String   @id @default(cuid())
+  employeeId   String
+  managerId    String
+  period       String
+  rating       Float?
+  feedback     String?
+  aiInsights   String?
+  strengths    String?
+  improvements String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  employee Employee @relation("ReviewEmployee", fields: [employeeId], references: [id], onDelete: Cascade)
+  manager  Employee @relation("ReviewManager", fields: [managerId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+}
+
+model JobPost {
+  id             String   @id @default(cuid())
+  organizationId String
+  title          String
+  department     String?
+  description    String   @db.Text
+  requirements   String?  @db.Text
+  location       String?
+  isRemote       Boolean  @default(false)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  candidates   Candidate[]
+
+  @@index([organizationId])
+}
+
+model Candidate {
+  id              String          @id @default(cuid())
+  jobPostId       String
+  name            String
+  email           String?
+  phone           String?
+  resumeUrl       String?
+  resumeText      String?         @db.Text
+  skills          String[]
+  experience      Json?
+  aiScore         Float?
+  aiSummary       String?         @db.Text
+  matchReason     String?         @db.Text
+  status          CandidateStatus @default(NEW)
+  embedding       String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  jobPost           JobPost            @relation(fields: [jobPostId], references: [id], onDelete: Cascade)
+  voiceInterviews   VoiceInterview[]
+
+  @@index([jobPostId])
+  @@index([status])
+  @@index([aiScore])
+}
+
+model VoiceInterview {
+  id              String   @id @default(cuid())
+  candidateId     String
+  questions       Json
+  transcript      String?  @db.Text
+  sentimentScore  Float?
+  confidenceScore Float?
+  communicationScore Float?
+  overallScore    Float?
+  aiFeedback      String?  @db.Text
+  completedAt     DateTime?
+  createdAt       DateTime @default(now())
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  role      String
+  content   String   @db.Text
+  sessionId String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, sessionId])
+}
+
+model Announcement {
+  id             String   @id @default(cuid())
+  organizationId String
+  title          String
+  content        String   @db.Text
+  priority       String   @default("normal")
+  publishedAt    DateTime @default(now())
+  expiresAt      DateTime?
+
+  reads AnnouncementRead[]
+
+  @@index([organizationId])
+}
+
+model AnnouncementRead {
+  id             String   @id @default(cuid())
+  announcementId String
+  employeeId     String
+  readAt         DateTime @default(now())
+
+  announcement Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  employee     Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([announcementId, employeeId])
+}
+
+model ActivityLog {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String?
+  action         String
+  entity         String?
+  entityId       String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId, createdAt])
+}
