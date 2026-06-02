@@ -45,6 +45,11 @@ export function VoiceInterviewClient() {
   const [listening, setListening] = useState(false);
   const [analysis, setAnalysis] = useState(null);
   const recognitionRef = useRef(null);
+  /** Text already saved before the current mic session */
+  const transcriptBaseRef = useRef("");
+  /** Finalized phrases from the current mic session only */
+  const sessionFinalRef = useRef("");
+  const listeningRef = useRef(false);
 
   const interviewer =
     INTERVIEWERS.find((i) => i.id === interviewerId) || INTERVIEWERS[0];
@@ -145,37 +150,87 @@ export function VoiceInterviewClient() {
     }
   }
 
+  function mergeTranscriptParts(base, finalized, interim) {
+    return [base, finalized, interim]
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .join(" ")
+      .replace(/\s+/g, " ");
+  }
+
+  function stopListening() {
+    listeningRef.current = false;
+    setListening(false);
+    try {
+      recognitionRef.current?.stop();
+    } catch {
+      // ignore
+    }
+  }
+
   function toggleListening() {
     if (typeof window === "undefined") return;
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       setTranscript(
-        (t) => t + "\n[Speech recognition not supported — type your answer below]"
+        (t) => `${t}\n[Speech recognition not supported — type your answer below]`.trim()
       );
       return;
     }
     if (listening) {
-      recognitionRef.current?.stop();
-      setListening(false);
+      stopListening();
       return;
     }
+
+    transcriptBaseRef.current = transcript.trim();
+    sessionFinalRef.current = "";
+
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = "en-US";
+
     recognition.onresult = (event) => {
-      let text = "";
+      let interim = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        text += event.results[i][0].transcript;
+        const result = event.results[i];
+        const phrase = result[0]?.transcript || "";
+        if (result.isFinal) {
+          sessionFinalRef.current = mergeTranscriptParts(
+            sessionFinalRef.current,
+            phrase,
+            ""
+          );
+        } else {
+          interim = mergeTranscriptParts(interim, phrase, "");
+        }
       }
-      setTranscript((prev) => `${prev} ${text}`.trim());
+      setTranscript(
+        mergeTranscriptParts(
+          transcriptBaseRef.current,
+          sessionFinalRef.current,
+          interim
+        )
+      );
     };
-    recognition.onerror = () => setListening(false);
-    recognition.onend = () => setListening(false);
+
+    recognition.onerror = () => stopListening();
+
+    recognition.onend = () => {
+      if (!listeningRef.current) return;
+      // Chrome stops after silence; restart while user still has mic on
+      try {
+        recognition.start();
+      } catch {
+        stopListening();
+      }
+    };
+
     recognitionRef.current = recognition;
-    recognition.start();
+    listeningRef.current = true;
     setListening(true);
+    recognition.start();
   }
 
   async function analyzeInterview() {
@@ -194,7 +249,10 @@ export function VoiceInterviewClient() {
   }
 
   function resetSetup() {
+    stopListening();
     window.speechSynthesis?.cancel();
+    transcriptBaseRef.current = "";
+    sessionFinalRef.current = "";
     setPhase("setup");
     setQuestions([]);
     setTranscript("");
@@ -424,7 +482,14 @@ export function VoiceInterviewClient() {
               className="w-full rounded-lg border bg-background p-3 text-sm min-h-[80px]"
               placeholder="Or type your interview response..."
               value={transcript}
-              onChange={(e) => setTranscript(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setTranscript(value);
+                if (listening) {
+                  transcriptBaseRef.current = value;
+                  sessionFinalRef.current = "";
+                }
+              }}
             />
           </CardContent>
         </Card>
