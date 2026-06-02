@@ -41,7 +41,7 @@ export function RemoveEmployeeDialog({ open, onClose, employees, onRemoved }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md overflow-visible">
         <CardHeader className="flex flex-row items-start justify-between space-y-0">
           <div>
             <CardTitle>Remove employee</CardTitle>
@@ -60,7 +60,7 @@ export function RemoveEmployeeDialog({ open, onClose, employees, onRemoved }) {
               <SelectTrigger>
                 <SelectValue placeholder="Select employee" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent side="right" align="start">
                 {employees.map((emp) => (
                   <SelectItem key={emp.id} value={emp.id}>
                     {emp.firstName} {emp.lastName} ({emp.employeeCode})

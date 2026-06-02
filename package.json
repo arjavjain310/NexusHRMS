@@ -14,6 +14,10 @@
     "db:add-user": "node scripts/ensure-company-user.mjs",
     "db:migrate-admin": "node scripts/migrate-admin-to-arjav.mjs",
     "db:update-arjav-profile": "node scripts/update-arjav-profile.mjs",
+    "db:seed-departments": "node scripts/seed-departments.mjs",
+    "db:renumber-employees": "node scripts/renumber-employees.mjs",
+    "db:rename-team": "node scripts/rename-demo-team.mjs",
+    "db:update-team-auth": "node scripts/update-team-emails-passwords.mjs",
     "db:setup": "prisma db push && npm run db:seed",
     "postinstall": "prisma generate"
   },

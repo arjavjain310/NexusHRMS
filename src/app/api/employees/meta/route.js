@@ -11,7 +11,7 @@ export async function GET() {
   }
 
   try {
-    const [departments, designations, managers, employeeCount] = await Promise.all([
+    const [departments, designations, managers, codeRows] = await Promise.all([
       prisma.department.findMany({
         where: { organizationId: session.organizationId },
         orderBy: { name: "asc" },
@@ -32,10 +32,18 @@ export async function GET() {
           employeeCode: true,
         },
       }),
-      prisma.employee.count({ where: { organizationId: session.organizationId } }),
+      prisma.employee.findMany({
+        where: { organizationId: session.organizationId },
+        select: { employeeCode: true },
+      }),
     ]);
 
-    const suggestedCode = `EMP${String(employeeCount + 1).padStart(3, "0")}`;
+    let maxNum = 0;
+    for (const row of codeRows) {
+      const match = row.employeeCode?.match(/^EMP(\d+)$/i);
+      if (match) maxNum = Math.max(maxNum, parseInt(match[1], 10));
+    }
+    const suggestedCode = `EMP${String(maxNum + 1).padStart(3, "0")}`;
 
     return NextResponse.json({
       success: true,

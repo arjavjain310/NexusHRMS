@@ -114,7 +114,7 @@ export function AddEmployeeForm({ open, onClose, onCreated }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 sm:p-8">
-      <Card className="w-full max-w-2xl shadow-lg">
+      <Card className="relative z-50 w-full max-w-2xl shadow-lg overflow-visible">
         <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
           <div>
             <CardTitle>Add Employee</CardTitle>
@@ -127,8 +127,8 @@ export function AddEmployeeForm({ open, onClose, onCreated }) {
             <X className="h-4 w-4" />
           </Button>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <CardContent className="overflow-visible">
+          <form onSubmit={handleSubmit} className="space-y-6 overflow-visible">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="firstName">First name *</Label>
@@ -176,13 +176,13 @@ export function AddEmployeeForm({ open, onClose, onCreated }) {
                   onChange={(e) => updateField("employeeCode", e.target.value)}
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 relative z-0">
                 <Label>System role *</Label>
                 <Select value={form.role} onValueChange={(v) => updateField("role", v)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent side="right" align="start">
                     {ROLES.map((r) => (
                       <SelectItem key={r} value={r}>
                         {ROLE_LABELS[r] || r}
@@ -191,13 +191,13 @@ export function AddEmployeeForm({ open, onClose, onCreated }) {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 relative z-0">
                 <Label>Employment status</Label>
                 <Select value={form.status} onValueChange={(v) => updateField("status", v)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent side="right" align="start">
                     {STATUSES.map((s) => (
                       <SelectItem key={s} value={s}>
                         {s.replace("_", " ")}
@@ -206,7 +206,7 @@ export function AddEmployeeForm({ open, onClose, onCreated }) {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 relative z-0">
                 <Label>Department</Label>
                 <Select
                   value={form.departmentId || "__none__"}
@@ -217,7 +217,7 @@ export function AddEmployeeForm({ open, onClose, onCreated }) {
                   <SelectTrigger>
                     <SelectValue placeholder="Select department" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent side="right" align="start">
                     <SelectItem value="__none__">— None —</SelectItem>
                     {(meta?.departments || []).map((d) => (
                       <SelectItem key={d.id} value={d.id}>
@@ -227,7 +227,7 @@ export function AddEmployeeForm({ open, onClose, onCreated }) {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 relative z-0">
                 <Label>Designation</Label>
                 <Select
                   value={form.designationId || "__none__"}
@@ -243,7 +243,7 @@ export function AddEmployeeForm({ open, onClose, onCreated }) {
                       }
                     />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent side="right" align="start">
                     <SelectItem value="__none__">— None —</SelectItem>
                     {designationsForDept.map((d) => (
                       <SelectItem key={d.id} value={d.id}>
@@ -253,7 +253,7 @@ export function AddEmployeeForm({ open, onClose, onCreated }) {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2 sm:col-span-2">
+              <div className="space-y-2 sm:col-span-2 relative z-0">
                 <Label>Reporting manager</Label>
                 <Select
                   value={form.managerId || "__none__"}
@@ -262,7 +262,7 @@ export function AddEmployeeForm({ open, onClose, onCreated }) {
                   <SelectTrigger>
                     <SelectValue placeholder="Optional" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent side="right" align="start" className="max-h-60">
                     <SelectItem value="__none__">— None —</SelectItem>
                     {(meta?.managers || []).map((m) => (
                       <SelectItem key={m.id} value={m.id}>

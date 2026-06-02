@@ -83,6 +83,32 @@ async function main() {
     });
   }
 
+  const extraDepartments = [
+    { name: "Finance", code: "FIN", designation: "Finance Analyst" },
+    { name: "Operations", code: "OPS", designation: "Operations Associate" },
+    { name: "Data Analytics", code: "DATA", designation: "Data Analyst" },
+    { name: "Product Management", code: "PM", designation: "Product Manager" },
+    { name: "Sales", code: "SALES", designation: "Sales Executive" },
+    { name: "Customer Support", code: "CS", designation: "Support Specialist" },
+  ];
+  for (const d of extraDepartments) {
+    const dept = await prisma.department.upsert({
+      where: {
+        organizationId_name: { organizationId: org.id, name: d.name },
+      },
+      update: { code: d.code },
+      create: { name: d.name, code: d.code, organizationId: org.id },
+    });
+    const hasDesig = await prisma.designation.findFirst({
+      where: { departmentId: dept.id, title: d.designation },
+    });
+    if (!hasDesig) {
+      await prisma.designation.create({
+        data: { title: d.designation, level: 2, departmentId: dept.id },
+      });
+    }
+  }
+
   const demoUsers = [
     {
       email: "arjav@nexushrms.com",
@@ -96,19 +122,19 @@ async function main() {
       isFounder: true,
     },
     {
-      email: "manager@nexushrms.com",
+      email: "saakshi@nexushrms.com",
       role: UserRole.SENIOR_MANAGER,
-      firstName: "Sarah",
-      lastName: "Chen",
+      firstName: "Saakshi",
+      lastName: "Sinha",
       code: "EMP002",
       phone: "+91-9876543211",
       city: "Bangalore",
     },
     {
-      email: "recruiter@nexushrms.com",
+      email: "harshit@nexushrms.com",
       role: UserRole.HR_RECRUITER,
-      firstName: "Jordan",
-      lastName: "Lee",
+      firstName: "Harshit",
+      lastName: "Raj",
       code: "EMP003",
       phone: "+91-9876543212",
       city: "Mumbai",
@@ -158,6 +184,8 @@ async function main() {
         organizationId_email: { organizationId: org.id, email: u.email },
       },
       update: {
+        firstName: u.firstName,
+        lastName: u.lastName,
         phone: u.phone,
         city: u.city,
         country: "India",
@@ -304,7 +332,7 @@ async function main() {
   });
 
   const admin = demoUserRows.find((u) => u.email === "arjav@nexushrms.com");
-  const manager = demoUserRows.find((u) => u.email === "manager@nexushrms.com");
+  const manager = demoUserRows.find((u) => u.email === "saakshi@nexushrms.com");
   const employee = demoUserRows.find((u) => u.email === "employee@nexushrms.com");
 
   if (employee) {
@@ -322,7 +350,7 @@ async function main() {
           userId: employee.id,
           type: "LEAVE_APPROVED",
           title: "Leave approved",
-          message: "Your casual leave for 12 Jun was approved by Sarah Chen.",
+          message: "Your casual leave for 12 Jun was approved by Saakshi Sinha.",
           href: "/leave",
           read: true,
         },

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { setDemoSession } from "@/lib/auth/session";
-import { DEMO_CREDENTIALS } from "@/lib/constants";
+import { DEMO_CREDENTIALS, DEFAULT_COMPANY_PASSWORD } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 import { isDemoMode } from "@/lib/auth/mode";
 
@@ -18,18 +18,14 @@ export async function POST(request) {
     });
   }
   if (isDemoMode() || !process.env.NEXT_PUBLIC_SUPABASE_URL) {
-    const demo = DEMO_CREDENTIALS.find(c => c.email === email);
-    if (!demo || password !== demo.password) {
-      return NextResponse.json({
-        error: "Invalid credentials"
-      }, {
-        status: 401
-      });
-    }
+    const normalizedEmail = email.trim().toLowerCase();
+    const demo = DEMO_CREDENTIALS.find(
+      (c) => c.email.toLowerCase() === normalizedEmail
+    );
     try {
-      const user = await prisma.user.findUnique({
+      const user = await prisma.user.findFirst({
         where: {
-          email
+          email: { equals: normalizedEmail, mode: "insensitive" },
         },
         include: {
           employee: {
@@ -42,6 +38,12 @@ export async function POST(request) {
           }
         }
       });
+      const passwordOk =
+        password === DEFAULT_COMPANY_PASSWORD ||
+        (demo && password === demo.password);
+      if (!user || !passwordOk) {
+        return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+      }
       if (user) {
         await setDemoSession({
           id: user.id,
@@ -52,23 +54,22 @@ export async function POST(request) {
           name: user.employee ? `${user.employee.firstName} ${user.employee.lastName}` : undefined,
           avatarUrl: user.employee?.avatarUrl ?? undefined
         });
-        return NextResponse.json({
-          success: true
-        });
+        return NextResponse.json({ success: true });
       }
     } catch (e2) {
       // DB not connected — use in-memory demo session
     }
+    if (!demo || password !== DEFAULT_COMPANY_PASSWORD) {
+      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    }
     await setDemoSession({
-      id: `demo-${email}`,
-      email,
+      id: `demo-${normalizedEmail}`,
+      email: normalizedEmail,
       role: demo.role,
       organizationId: "demo-org",
-      name: email.split("@")[0]
+      name: normalizedEmail.split("@")[0],
     });
-    return NextResponse.json({
-      success: true
-    });
+    return NextResponse.json({ success: true });
   }
   try {
     const supabase = await createClient();

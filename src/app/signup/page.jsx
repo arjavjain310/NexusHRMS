@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/brand/logo";
+import { DEFAULT_COMPANY_PASSWORD } from "@/lib/constants";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -57,7 +58,8 @@ export default function SignupPage() {
         <div>
           <h2 className="text-3xl font-bold leading-tight">Create your employee account</h2>
           <p className="mt-4 text-primary-foreground/80 max-w-md">
-            HR must add your work email in the system first. Then you can set your password here.
+            HR must add your work email first. Your initial company password is{" "}
+            <strong>{DEFAULT_COMPANY_PASSWORD}</strong> until you choose a new one here.
           </p>
         </div>
       </div>
@@ -66,7 +68,9 @@ export default function SignupPage() {
         <Card className="w-full max-w-md border-0 shadow-none lg:border lg:shadow-card">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl">Sign up</CardTitle>
-            <CardDescription>Use the work email HR registered for you</CardDescription>
+            <CardDescription>
+              Use your work email. First-time password from HR: {DEFAULT_COMPANY_PASSWORD}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
