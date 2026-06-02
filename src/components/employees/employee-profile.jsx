@@ -29,10 +29,32 @@ export function EmployeeProfile({
   const [employee, setEmployee] = useState(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
-    fetch(`/api/employees/${employeeId}`).then(r => r.json()).then(j => {
-      setEmployee(j.data || null);
-      setLoading(false);
-    });
+    let cancelled = false;
+    fetch(`/api/employees/${employeeId}`)
+      .then((r) => r.json())
+      .then((j) => {
+        if (cancelled) return;
+        const row = j.data;
+        if (row) {
+          setEmployee({
+            ...row,
+            education: Array.isArray(row.education) ? row.education : [],
+            documents: Array.isArray(row.documents) ? row.documents : [],
+          });
+        } else {
+          setEmployee(null);
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setEmployee(null);
+          setLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [employeeId]);
   if (loading) {
     return <div className="py-20 text-center text-muted-foreground">Loading profile...</div>;
@@ -128,7 +150,8 @@ export function EmployeeProfile({
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  {employee.bio || `${employee.firstName} is a valued member of ${employee.organization.name || "the organization"}.`}
+                  {employee.bio ||
+                    `${employee.firstName} is a valued member of ${employee.organization?.name || "the organization"}.`}
                 </p>
               </CardContent>
             </Card>
@@ -137,8 +160,13 @@ export function EmployeeProfile({
                 <CardTitle className="text-base">Degrees & Certificates</CardTitle>
               </CardHeader>
               <CardContent>
-                {employee.education.length ? <div className="space-y-4">
-                    {employee.education.map((edu, i) => <div key={i} className="grid sm:grid-cols-3 gap-2 text-sm border-b pb-3 last:border-0">
+                {Array.isArray(employee.education) && employee.education.length > 0 ? (
+                  <div className="space-y-4">
+                    {employee.education.map((edu, i) => (
+                      <div
+                        key={i}
+                        className="grid sm:grid-cols-3 gap-2 text-sm border-b pb-3 last:border-0"
+                      >
                         <div>
                           <p className="text-muted-foreground text-xs">Degree</p>
                           <p className="font-medium">{edu.degree || "—"}</p>
@@ -151,8 +179,12 @@ export function EmployeeProfile({
                           <p className="text-muted-foreground text-xs">CGPA / Percentage</p>
                           <p>{edu.cgpa || "—"}</p>
                         </div>
-                      </div>)}
-                  </div> : <p className="text-sm text-muted-foreground">No education records added.</p>}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No education records added.</p>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -185,7 +217,9 @@ export function EmployeeProfile({
               <CardContent className="p-6 grid sm:grid-cols-2 gap-6 text-sm">
                 <div>
                   <p className="text-muted-foreground">Date Joined</p>
-                  <p className="font-medium">{formatDate(employee.dateOfJoining)}</p>
+                  <p className="font-medium">
+                    {employee.dateOfJoining ? formatDate(employee.dateOfJoining) : "—"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Employment Status</p>
@@ -206,12 +240,21 @@ export function EmployeeProfile({
           <TabsContent value="documents">
             <Card>
               <CardContent className="p-6">
-                {employee.documents.length ? <ul className="space-y-2">
-                    {employee.documents.map(doc => <li key={doc.id} className="flex justify-between items-center border rounded-lg px-4 py-3 text-sm">
+                {(employee.documents || []).length > 0 ? (
+                  <ul className="space-y-2">
+                    {(employee.documents || []).map((doc) => (
+                      <li
+                        key={doc.id}
+                        className="flex justify-between items-center border rounded-lg px-4 py-3 text-sm"
+                      >
                         <span className="font-medium">{doc.name}</span>
                         <span className="text-muted-foreground">{doc.type}</span>
-                      </li>)}
-                  </ul> : <p className="text-sm text-muted-foreground">No documents uploaded yet.</p>}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No documents uploaded yet.</p>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

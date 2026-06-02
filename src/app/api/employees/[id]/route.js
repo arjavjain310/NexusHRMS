@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/auth/permissions";
-import { getAttendanceDayRange } from "@/lib/attendance";
+import { getAttendanceDayRange, serializeAttendanceRecord } from "@/lib/attendance";
 export async function GET(_request, {
   params
 }) {
@@ -80,13 +80,16 @@ export async function GET(_request, {
     } else if (todayAttendance?.checkIn) {
       attendanceStatus = "CLOCKED_IN";
     }
+    const { salaryStructure: _salary, ...profile } = employee;
     return NextResponse.json({
       success: true,
       data: {
-        ...employee,
+        ...profile,
+        education: Array.isArray(employee.education) ? employee.education : [],
+        documents: employee.documents ?? [],
         attendanceStatus,
-        todayAttendance
-      }
+        todayAttendance: todayAttendance ? serializeAttendanceRecord(todayAttendance) : null,
+      },
     });
   } catch (error) {
     console.error("[employee GET]", error);
