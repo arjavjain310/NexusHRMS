@@ -1,6 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/providers/theme-provider";
-import { APP_NAME } from "@/lib/constants";
+import { APP_NAME, LOGO_ICON_SRC } from "@/lib/constants";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,6 +16,10 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: { default: APP_NAME, template: `%s | ${APP_NAME}` },
   description: "AI-powered Human Resource Management System for modern enterprises",
+  icons: {
+    icon: [{ url: LOGO_ICON_SRC, type: "image/png" }],
+    apple: [{ url: LOGO_ICON_SRC, type: "image/png" }],
+  },
 };
 
 export default function RootLayout({ children }) {

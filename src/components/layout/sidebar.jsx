@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { NAV_ITEMS, APP_NAME } from "@/lib/constants";
+import { NAV_ITEMS } from "@/lib/constants";
+import { Logo } from "@/components/brand/logo";
 import { getNavIcon } from "./icon-map";
 import { canAccessRoute } from "@/lib/auth/permissions";
-import { Sparkles } from "lucide-react";
 
 
 
@@ -24,16 +24,13 @@ export function Sidebar({ role, collapsed }) {
         collapsed ? "w-[72px]" : "w-64"
       )}
     >
-      <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-          <Sparkles className="h-5 w-5" />
-        </div>
-        {!collapsed && (
-          <div>
-            <p className="text-sm font-semibold tracking-tight">{APP_NAME}</p>
-            <p className="text-xs text-muted-foreground">AI HR Platform</p>
-          </div>
-        )}
+      <div className="flex h-16 items-center border-b border-sidebar-border px-3">
+        <Logo
+          variant={collapsed ? "icon" : "full"}
+          href="/dashboard"
+          priority
+          className={collapsed ? "" : "max-h-10 w-full"}
+        />
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">

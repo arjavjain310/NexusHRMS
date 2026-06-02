@@ -1,18 +1,13 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { APP_NAME } from "@/lib/constants";
+import { Logo } from "@/components/brand/logo";
 import { Sparkles, Users, Bot, Mic, ArrowRight } from "lucide-react";
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-primary/5">
       <header className="container mx-auto flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Sparkles className="h-5 w-5" />
-          </div>
-          <span className="font-semibold">{APP_NAME}</span>
-        </div>
+        <Logo variant="full" href="/" priority className="h-9" />
         <div className="flex gap-3">
           <Button variant="ghost" asChild>
             <Link href="/login">Sign in</Link>

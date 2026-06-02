@@ -7,8 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { APP_NAME } from "@/lib/constants";
-import { Sparkles } from "lucide-react";
+import { Logo } from "@/components/brand/logo";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -52,9 +51,8 @@ export default function SignupPage() {
   return (
     <div className="flex min-h-screen">
       <div className="hidden flex-1 flex-col justify-between bg-primary p-12 text-primary-foreground lg:flex">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-8 w-8" />
-          <span className="text-xl font-semibold">{APP_NAME}</span>
+        <div className="inline-block rounded-xl bg-white/95 px-4 py-3 shadow-sm">
+          <Logo variant="full" priority className="h-10 max-w-[200px]" />
         </div>
         <div>
           <h2 className="text-3xl font-bold leading-tight">Create your employee account</h2>

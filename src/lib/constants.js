@@ -1,5 +1,9 @@
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Nexus HRMS";
 
+/** Brand assets in /public */
+export const LOGO_SRC = "/logo.png";
+export const LOGO_ICON_SRC = "/favicon.png";
+
 /** Show demo quick-login buttons on /login (local dev only). */
 export const IS_DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 
