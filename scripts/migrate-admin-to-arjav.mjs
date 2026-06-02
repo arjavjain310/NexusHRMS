@@ -18,12 +18,22 @@ async function main() {
   const org = await prisma.organization.findFirst({ orderBy: { createdAt: "asc" } });
   if (!org) throw new Error("No organization found.");
 
-  const dept = await prisma.department.findFirst({
-    where: { organizationId: org.id, name: "Engineering" },
+  let dept = await prisma.department.findFirst({
+    where: { organizationId: org.id, name: "Development" },
   });
-  const desigSenior = await prisma.designation.findFirst({
-    where: { departmentId: dept?.id, title: "Senior Engineer" },
+  if (!dept) {
+    dept = await prisma.department.create({
+      data: { name: "Development", code: "DEV", organizationId: org.id },
+    });
+  }
+  let desigAiml = await prisma.designation.findFirst({
+    where: { departmentId: dept.id, title: "AIML Engineer" },
   });
+  if (!desigAiml) {
+    desigAiml = await prisma.designation.create({
+      data: { title: "AIML Engineer", level: 4, departmentId: dept.id },
+    });
+  }
 
   const alexUser = await prisma.user.findUnique({
     where: { email: ALEX_EMAIL },
@@ -53,10 +63,12 @@ async function main() {
           lastName: "Jain",
           email: ARJAV_EMAIL,
           employeeCode: "EMP001",
-          departmentId: dept?.id,
-          designationId: desigSenior?.id,
+          departmentId: dept.id,
+          designationId: desigAiml.id,
+          phone: "8472835345",
+          subDepartment: "Product",
           managerId: null,
-          bio: "Arjav Jain — Administrator at Nexus Technologies.",
+          bio: "Founder & Administrator at Nexus Technologies Pvt Ltd.",
         },
       });
     }
@@ -88,17 +100,18 @@ async function main() {
         firstName: "Arjav",
         lastName: "Jain",
         email: ARJAV_EMAIL,
-        phone: "+91-9000000005",
+        phone: "8472835345",
         city: "Bangalore",
         country: "India",
         dateOfJoining: new Date(),
         organizationId: org.id,
-        departmentId: dept?.id,
-        designationId: desigSenior?.id,
+        departmentId: dept.id,
+        designationId: desigAiml.id,
         userId: arjavUser.id,
         paymentMode: "Bank Transfer",
         businessUnit: "Technology",
-        subDepartment: "Leadership",
+        subDepartment: "Product",
+        managerId: null,
       },
     });
   } else {
@@ -116,11 +129,13 @@ async function main() {
         lastName: "Jain",
         email: ARJAV_EMAIL,
         employeeCode: "EMP001",
-        departmentId: dept?.id,
-        designationId: desigSenior?.id,
+        departmentId: dept.id,
+        designationId: desigAiml.id,
+        phone: "8472835345",
+        subDepartment: "Product",
         managerId: null,
         userId: arjavUser.id,
-        bio: "Arjav Jain — Administrator at Nexus Technologies.",
+        bio: "Founder & Administrator at Nexus Technologies Pvt Ltd.",
       },
     });
   }

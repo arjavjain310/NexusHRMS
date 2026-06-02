@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getInitials, formatDate } from "@/lib/utils";
 import { Mail, Phone, MapPin, Hash, Building2, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { BioEditor, EducationEditor } from "@/components/employees/profile-section-editor";
 const STATUS_LABELS = {
   NOT_IN_YET: {
     label: "NOT IN YET",
@@ -28,6 +29,15 @@ export function EmployeeProfile({
 }) {
   const [employee, setEmployee] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isOwner, setIsOwner] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/me")
+      .then((r) => r.json())
+      .then((j) => setIsOwner(j.data?.id === employeeId))
+      .catch(() => setIsOwner(false));
+  }, [employeeId]);
+
   useEffect(() => {
     let cancelled = false;
     fetch(`/api/employees/${employeeId}`)
@@ -68,6 +78,33 @@ export function EmployeeProfile({
       </div>;
   }
   const status = STATUS_LABELS[employee.attendanceStatus || "NOT_IN_YET"] || STATUS_LABELS.NOT_IN_YET;
+  const hierarchyCards = [
+    {
+      label: "Business Unit",
+      value: employee.businessUnit || "—",
+      icon: Building2,
+    },
+    {
+      label: "Department",
+      value: employee.department?.name || "—",
+      icon: Building2,
+    },
+    {
+      label: "Sub Department",
+      value: employee.subDepartment || "—",
+      icon: Building2,
+    },
+  ];
+  if (employee.manager) {
+    hierarchyCards.push({
+      label: "Reporting Manager",
+      value: `${employee.manager.firstName} ${employee.manager.lastName}`,
+      icon: Users,
+    });
+  }
+
+  const fallbackBio = `${employee.firstName} is a valued member of ${employee.organization?.name || "the organization"}.`;
+
   return <div className="space-y-0 -m-4 lg:-m-8">
       {/* Banner */}
       <div className="relative bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600 text-white px-4 lg:px-8 pt-8 pb-24">
@@ -106,24 +143,14 @@ export function EmployeeProfile({
       </div>
 
       {/* Hierarchy cards */}
-      <div className="px-4 lg:px-8 -mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 relative z-10">
-        {[{
-        label: "Business Unit",
-        value: employee.businessUnit || "—",
-        icon: Building2
-      }, {
-        label: "Department",
-        value: employee.department?.name || "—",
-        icon: Building2
-      }, {
-        label: "Sub Department",
-        value: employee.subDepartment || "—",
-        icon: Building2
-      }, {
-        label: "Reporting Manager",
-        value: employee.manager ? `${employee.manager.firstName} ${employee.manager.lastName}` : "—",
-        icon: Users
-      }].map(item => <Card key={item.label} className="shadow-card">
+      <div
+        className={cn(
+          "px-4 lg:px-8 -mt-12 grid gap-4 sm:grid-cols-2 relative z-10",
+          hierarchyCards.length >= 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"
+        )}
+      >
+        {hierarchyCards.map((item) => (
+          <Card key={item.label} className="shadow-card">
             <CardContent className="p-4">
               <p className="text-xs text-muted-foreground uppercase tracking-wide">{item.label}</p>
               <p className="font-medium mt-1 flex items-center gap-2">
@@ -131,7 +158,8 @@ export function EmployeeProfile({
                 {item.value}
               </p>
             </CardContent>
-          </Card>)}
+          </Card>
+        ))}
       </div>
 
       <div className="px-4 lg:px-8 py-6">
@@ -145,45 +173,73 @@ export function EmployeeProfile({
 
           <TabsContent value="about" className="space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Summary</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {employee.bio ||
-                    `${employee.firstName} is a valued member of ${employee.organization?.name || "the organization"}.`}
-                </p>
+              <CardContent className="p-6">
+                {isOwner ? (
+                  <BioEditor
+                    employeeId={employee.id}
+                    initialBio={employee.bio}
+                    fallbackBio={fallbackBio}
+                    onSaved={(data) =>
+                      setEmployee((prev) => ({
+                        ...prev,
+                        bio: data.bio,
+                        education: Array.isArray(data.education) ? data.education : prev.education,
+                      }))
+                    }
+                  />
+                ) : (
+                  <>
+                    <p className="text-base font-semibold">Summary</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed mt-4">
+                      {employee.bio || fallbackBio}
+                    </p>
+                  </>
+                )}
               </CardContent>
             </Card>
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Degrees & Certificates</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {Array.isArray(employee.education) && employee.education.length > 0 ? (
-                  <div className="space-y-4">
-                    {employee.education.map((edu, i) => (
-                      <div
-                        key={i}
-                        className="grid sm:grid-cols-3 gap-2 text-sm border-b pb-3 last:border-0"
-                      >
-                        <div>
-                          <p className="text-muted-foreground text-xs">Degree</p>
-                          <p className="font-medium">{edu.degree || "—"}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground text-xs">Branch / Specialization</p>
-                          <p>{edu.branch || "—"}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground text-xs">CGPA / Percentage</p>
-                          <p>{edu.cgpa || "—"}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+              <CardContent className="p-6">
+                {isOwner ? (
+                  <EducationEditor
+                    employeeId={employee.id}
+                    initialEducation={employee.education}
+                    onSaved={(data) =>
+                      setEmployee((prev) => ({
+                        ...prev,
+                        education: Array.isArray(data.education) ? data.education : [],
+                        bio: data.bio ?? prev.bio,
+                      }))
+                    }
+                  />
                 ) : (
-                  <p className="text-sm text-muted-foreground">No education records added.</p>
+                  <>
+                    <p className="text-base font-semibold">Degrees & Certificates</p>
+                    {Array.isArray(employee.education) && employee.education.length > 0 ? (
+                      <div className="space-y-4 mt-4">
+                        {employee.education.map((edu, i) => (
+                          <div
+                            key={i}
+                            className="grid sm:grid-cols-3 gap-2 text-sm border-b pb-3 last:border-0"
+                          >
+                            <div>
+                              <p className="text-muted-foreground text-xs">Degree</p>
+                              <p className="font-medium">{edu.degree || "—"}</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground text-xs">Branch / Specialization</p>
+                              <p>{edu.branch || "—"}</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground text-xs">CGPA / Percentage</p>
+                              <p>{edu.cgpa || "—"}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground mt-4">No education records added.</p>
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>

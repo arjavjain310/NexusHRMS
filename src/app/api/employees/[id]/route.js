@@ -137,7 +137,8 @@ export async function PATCH(request, {
       include: {
         department: true,
         designation: true,
-        manager: true
+        manager: { select: { id: true, firstName: true, lastName: true } },
+        organization: { select: { name: true } },
       }
     });
     return NextResponse.json({

@@ -62,6 +62,27 @@ async function main() {
     });
   }
 
+  const deptDevelopment = await prisma.department.upsert({
+    where: {
+      organizationId_name: { organizationId: org.id, name: "Development" },
+    },
+    update: {},
+    create: {
+      name: "Development",
+      code: "DEV",
+      organizationId: org.id,
+    },
+  });
+
+  let desigAiml = await prisma.designation.findFirst({
+    where: { departmentId: deptDevelopment.id, title: "AIML Engineer" },
+  });
+  if (!desigAiml) {
+    desigAiml = await prisma.designation.create({
+      data: { title: "AIML Engineer", level: 4, departmentId: deptDevelopment.id },
+    });
+  }
+
   const demoUsers = [
     {
       email: "arjav@nexushrms.com",
@@ -69,9 +90,10 @@ async function main() {
       firstName: "Arjav",
       lastName: "Jain",
       code: "EMP001",
-      phone: "+91-9000000005",
+      phone: "8472835345",
       city: "Bangalore",
       pan: "ARJAV4208M",
+      isFounder: true,
     },
     {
       email: "manager@nexushrms.com",
@@ -117,6 +139,20 @@ async function main() {
       },
     });
 
+    const isFounder = "isFounder" in u && u.isFounder;
+    const deptId = isFounder
+      ? deptDevelopment.id
+      : u.role === UserRole.HR_RECRUITER
+        ? deptHR.id
+        : deptEngineering.id;
+    const designationId = isFounder
+      ? desigAiml.id
+      : u.role === UserRole.HR_RECRUITER
+        ? desigHR.id
+        : u.role === UserRole.EMPLOYEE
+          ? desigIntern.id
+          : desigSenior.id;
+
     const employee = await prisma.employee.upsert({
       where: {
         organizationId_email: { organizationId: org.id, email: u.email },
@@ -127,9 +163,14 @@ async function main() {
         country: "India",
         panNumber: "pan" in u ? u.pan : undefined,
         businessUnit: "Technology",
-        subDepartment: u.role === UserRole.HR_RECRUITER ? "HR Ops" : "Product",
+        subDepartment: isFounder ? "Product" : u.role === UserRole.HR_RECRUITER ? "HR Ops" : "Product",
         paymentMode: "Bank Transfer",
-        bio: `${u.firstName} is a key member of ${org.name}.`,
+        departmentId: deptId,
+        designationId,
+        managerId: isFounder ? null : u.role === UserRole.EMPLOYEE ? managerEmployeeId : undefined,
+        bio: isFounder
+          ? "Founder & Administrator at Nexus Technologies Pvt Ltd."
+          : `${u.firstName} is a key member of ${org.name}.`,
         education: [
           {
             degree: "B.Tech",
@@ -137,7 +178,6 @@ async function main() {
             cgpa: "8.5",
           },
         ],
-        managerId: u.role === UserRole.EMPLOYEE ? managerEmployeeId : undefined,
       },
       create: {
         employeeCode: u.code,
@@ -149,23 +189,20 @@ async function main() {
         country: "India",
         dateOfJoining: new Date("2025-03-05"),
         organizationId: org.id,
-        departmentId: u.role === UserRole.HR_RECRUITER ? deptHR.id : deptEngineering.id,
-        designationId:
-          u.role === UserRole.HR_RECRUITER
-            ? desigHR.id
-            : u.role === UserRole.EMPLOYEE
-              ? desigIntern.id
-              : desigSenior.id,
+        departmentId: deptId,
+        designationId,
         userId: user.id,
         panNumber: "pan" in u ? u.pan : `PAN${u.code}`,
         businessUnit: "Technology",
-        subDepartment: u.role === UserRole.HR_RECRUITER ? "HR Ops" : "Product",
+        subDepartment: isFounder ? "Product" : u.role === UserRole.HR_RECRUITER ? "HR Ops" : "Product",
         paymentMode: "Bank Transfer",
-        bio: `${u.firstName} works with ${org.name} driving HR and product excellence.`,
+        bio: isFounder
+          ? "Founder & Administrator at Nexus Technologies Pvt Ltd."
+          : `${u.firstName} works with ${org.name} driving HR and product excellence.`,
         education: [
           { degree: "B.Tech", branch: "Computer Science", cgpa: "8.2" },
         ],
-        managerId: u.role === UserRole.EMPLOYEE ? managerEmployeeId : undefined,
+        managerId: isFounder ? null : u.role === UserRole.EMPLOYEE ? managerEmployeeId : undefined,
       },
     });
 
