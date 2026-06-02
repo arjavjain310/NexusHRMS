@@ -29,7 +29,7 @@ function pickSpeechVoice(preferMale) {
 
 export function VoiceInterviewClient() {
   const [phase, setPhase] = useState("setup");
-  const [interviewerId, setInterviewerId] = useState("arjav");
+  const [interviewerId, setInterviewerId] = useState("interviewer-1");
   const [jobTitle, setJobTitle] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [resumeText, setResumeText] = useState("");
