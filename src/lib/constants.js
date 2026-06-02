@@ -17,7 +17,7 @@ export const ROLE_LABELS = {
 };
 
 export const DEMO_CREDENTIALS = [
-  { email: "admin@nexushrms.com", password: "demo1234", role: "ADMIN"  },
+  { email: "arjav@nexushrms.com", password: "demo1234", role: "ADMIN"  },
   { email: "manager@nexushrms.com", password: "demo1234", role: "SENIOR_MANAGER"  },
   { email: "recruiter@nexushrms.com", password: "demo1234", role: "HR_RECRUITER"  },
   { email: "employee@nexushrms.com", password: "demo1234", role: "EMPLOYEE"  },

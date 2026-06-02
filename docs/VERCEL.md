@@ -74,13 +74,13 @@ In Supabase: **Authentication → Providers → Email** enabled.
 **Required for signup/login without errors:**
 
 1. **Authentication → Providers → Email** → turn **OFF** “Confirm email”
-2. If a user already exists as unconfirmed: **Authentication → Users** → delete `admin@nexushrms.com` → **Add user** with **Auto Confirm User** checked
+2. If a user already exists as unconfirmed: **Authentication → Users** → delete the old user → **Add user** with **Auto Confirm User** checked
 3. Or run in Supabase **SQL Editor** (not Neon):
 
 ```sql
 UPDATE auth.users
 SET email_confirmed_at = now(), confirmed_at = now()
-WHERE email = 'admin@nexushrms.com';
+WHERE email = 'arjav@nexushrms.com';
 ```
 
 ## 4. Database setup (one time)
@@ -98,8 +98,18 @@ This creates tables and demo users in Neon. Vercel does not run seed automatical
 
 | Email | Password |
 |-------|----------|
-| admin@nexushrms.com | sign up at /signup |
+| arjav@nexushrms.com | Administrator — sign up at /signup |
 | employee@nexushrms.com | sign up at /signup |
+
+**Replace Alex Admin with Arjav Jain (existing Neon DB):**
+
+```bash
+npm run db:migrate-admin
+# optional Supabase user id:
+npm run db:migrate-admin -- ad9b4f6f-0edd-4039-ae45-10c06aaaad255
+```
+
+Then remove `admin@nexushrms.com` from Supabase → Authentication → Users if it still exists.
 
 ## 4. Deploy
 

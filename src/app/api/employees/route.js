@@ -196,9 +196,9 @@ function getMockEmployees() {
     {
       id: "1",
       employeeCode: "EMP001",
-      firstName: "Alex",
-      lastName: "Admin",
-      email: "admin@nexushrms.com",
+      firstName: "Arjav",
+      lastName: "Jain",
+      email: "arjav@nexushrms.com",
       status: "ACTIVE",
       department: { name: "Engineering" },
       designation: { title: "Senior Engineer" },

@@ -92,7 +92,7 @@ Open [http://localhost:3000](http://localhost:3000)
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | admin@nexushrms.com | (set via /signup with Supabase) |
+| Admin | arjav@nexushrms.com | Arjav Jain (set via /signup with Supabase) |
 | Senior Manager | manager@nexushrms.com | (set via /signup) |
 | HR Recruiter | recruiter@nexushrms.com | (set via /signup) |
 | Employee | employee@nexushrms.com | (set via /signup) |
