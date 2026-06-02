@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
-import { hasPermission } from "@/lib/auth/permissions";
+import { canManageEmployees } from "@/lib/auth/employee-management";
 import { getAttendanceDayRange, serializeAttendanceRecord } from "@/lib/attendance";
 export async function GET(_request, {
   params
@@ -53,7 +53,7 @@ export async function GET(_request, {
       });
     }
     const isSelf = session.employeeId === id;
-    const isAdmin = hasPermission(session.role, "manageEmployees");
+    const isAdmin = canManageEmployees(session);
     if (!isSelf && !isAdmin && session.role !== "SENIOR_MANAGER") {
       return NextResponse.json({
         error: "Forbidden"
@@ -114,7 +114,7 @@ export async function PATCH(request, {
   } = await params;
   const body = await request.json();
   const isSelf = session.employeeId === id;
-  if (!isSelf && !hasPermission(session.role, "manageEmployees")) {
+  if (!isSelf && !canManageEmployees(session)) {
     return NextResponse.json({
       error: "Forbidden"
     }, {
@@ -150,5 +150,66 @@ export async function PATCH(request, {
     }, {
       status: 500
     });
+  }
+}
+
+export async function DELETE(_request, { params }) {
+  const session = await getSession();
+  if (!session || !canManageEmployees(session)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { id } = await params;
+
+  if (session.employeeId === id) {
+    return NextResponse.json(
+      { error: "You cannot remove your own employee record." },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const employee = await prisma.employee.findFirst({
+      where: { id, organizationId: session.organizationId },
+      include: { user: { select: { id: true, role: true } } },
+    });
+
+    if (!employee) {
+      return NextResponse.json({ error: "Employee not found" }, { status: 404 });
+    }
+
+    if (employee.status === "TERMINATED") {
+      return NextResponse.json({ error: "Employee is already removed." }, { status: 400 });
+    }
+
+    if (employee.user?.role === "ADMIN") {
+      const adminCount = await prisma.user.count({
+        where: { organizationId: session.organizationId, role: "ADMIN" },
+      });
+      if (adminCount <= 1) {
+        return NextResponse.json(
+          { error: "Cannot remove the only admin in the organization." },
+          { status: 400 }
+        );
+      }
+    }
+
+    await prisma.$transaction(async (tx) => {
+      if (employee.userId) {
+        await tx.user.delete({ where: { id: employee.userId } });
+      }
+      await tx.employee.update({
+        where: { id },
+        data: { status: "TERMINATED", userId: null },
+      });
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: `${employee.firstName} ${employee.lastName} was removed from Nexus-HRMS.`,
+    });
+  } catch (e) {
+    console.error("[employee DELETE]", e);
+    return NextResponse.json({ error: "Failed to remove employee" }, { status: 500 });
   }
 }

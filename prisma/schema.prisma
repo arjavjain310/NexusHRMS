@@ -105,13 +105,15 @@ model Organization {
 }
 
 model User {
-  id             String   @id @default(cuid())
-  email          String   @unique
-  supabaseId     String?  @unique
-  role           UserRole @default(EMPLOYEE)
-  organizationId String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  email              String   @unique
+  supabaseId         String?  @unique
+  role               UserRole @default(EMPLOYEE)
+  organizationId     String
+  /// Admin can grant HR (or others) permission to add/remove employees
+  canManageEmployees Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   employee      Employee?

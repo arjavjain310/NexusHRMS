@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
-import { hasPermission } from "@/lib/auth/permissions";
+import { canManageEmployees, isOrgAdmin } from "@/lib/auth/employee-management";
 
 /** Departments, designations, managers, and form defaults for Add Employee */
 export async function GET() {
@@ -44,7 +44,8 @@ export async function GET() {
         designations,
         managers,
         suggestedCode,
-        canManageEmployees: hasPermission(session.role, "manageEmployees"),
+        canManageEmployees: canManageEmployees(session),
+        isAdmin: isOrgAdmin(session.role),
       },
     });
   } catch (e) {

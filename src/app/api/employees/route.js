@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
-import { hasPermission } from "@/lib/auth/permissions";
+import { canManageEmployees } from "@/lib/auth/employee-management";
 
 const VALID_ROLES = ["ADMIN", "SENIOR_MANAGER", "HR_RECRUITER", "EMPLOYEE"];
 const VALID_STATUSES = ["ACTIVE", "ON_LEAVE", "TERMINATED", "PROBATION"];
@@ -18,6 +18,7 @@ export async function GET(request) {
     const employees = await prisma.employee.findMany({
       where: {
         organizationId: session.organizationId,
+        status: { not: "TERMINATED" },
         ...(departmentId && { departmentId }),
         ...(search && {
           OR: [
@@ -46,7 +47,7 @@ export async function GET(request) {
 
 export async function POST(request) {
   const session = await getSession();
-  if (!session || !hasPermission(session.role, "manageEmployees")) {
+  if (!session || !canManageEmployees(session)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

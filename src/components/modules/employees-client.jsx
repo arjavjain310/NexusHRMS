@@ -3,22 +3,27 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AddEmployeeForm } from "@/components/employees/add-employee-form";
+import { EmployeeMoreOptions } from "@/components/employees/employee-more-options";
+import { RemoveEmployeeDialog } from "@/components/employees/remove-employee-dialog";
+import { ManageEmployeeAccessDialog } from "@/components/employees/manage-employee-access-dialog";
 import { ROLE_LABELS } from "@/lib/constants";
 import { getInitials } from "@/lib/utils";
-import { Plus, Search, ChevronRight } from "lucide-react";
+import { Search, ChevronRight } from "lucide-react";
 
 export function EmployeesClient() {
   const [employees, setEmployees] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
+  const [showRemove, setShowRemove] = useState(false);
+  const [showAccess, setShowAccess] = useState(false);
   const [canManage, setCanManage] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const fetchEmployees = useCallback(async () => {
     setLoading(true);
@@ -35,8 +40,13 @@ export function EmployeesClient() {
   useEffect(() => {
     fetch("/api/employees/meta")
       .then((r) => r.json())
-      .then((j) => setCanManage(!!j.data?.canManageEmployees));
+      .then((j) => {
+        setCanManage(!!j.data?.canManageEmployees);
+        setIsAdmin(!!j.data?.isAdmin);
+      });
   }, []);
+
+  const showMoreMenu = canManage || isAdmin;
 
   return (
     <div>
@@ -44,10 +54,14 @@ export function EmployeesClient() {
         title="Employees"
         description="Employee directory, profiles, departments, and hierarchy"
         action={
-          canManage ? (
-            <Button onClick={() => setShowAdd(true)}>
-              <Plus className="h-4 w-4" /> Add Employee
-            </Button>
+          showMoreMenu ? (
+            <EmployeeMoreOptions
+              canManage={canManage}
+              isAdmin={isAdmin}
+              onAddEmployee={() => setShowAdd(true)}
+              onRemoveEmployee={() => setShowRemove(true)}
+              onManageAccess={() => setShowAccess(true)}
+            />
           ) : null
         }
       />
@@ -57,6 +71,15 @@ export function EmployeesClient() {
         onClose={() => setShowAdd(false)}
         onCreated={() => fetchEmployees()}
       />
+
+      <RemoveEmployeeDialog
+        open={showRemove}
+        onClose={() => setShowRemove(false)}
+        employees={employees}
+        onRemoved={() => fetchEmployees()}
+      />
+
+      <ManageEmployeeAccessDialog open={showAccess} onClose={() => setShowAccess(false)} />
 
       <div className="mb-6 relative max-w-md">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

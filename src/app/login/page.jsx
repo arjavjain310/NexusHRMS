@@ -68,7 +68,7 @@ export default function LoginPage() {
       <div className="flex flex-1 items-center justify-center p-6">
         <Card className="w-full max-w-md border-0 shadow-none lg:border lg:shadow-card">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl">Welcome back</CardTitle>
+            <CardTitle className="text-2xl">Hello User,</CardTitle>
             <CardDescription>Sign in to your workspace</CardDescription>
           </CardHeader>
           <CardContent>

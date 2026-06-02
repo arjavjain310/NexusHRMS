@@ -39,6 +39,7 @@ export async function getSession() {
       role: dbUser.role,
       organizationId: dbUser.organizationId,
       employeeId: dbUser.employee?.id,
+      canManageEmployees: dbUser.canManageEmployees,
       name: dbUser.employee ? `${dbUser.employee.firstName} ${dbUser.employee.lastName}` : undefined,
       avatarUrl: dbUser.employee?.avatarUrl ?? undefined
     };
@@ -78,6 +79,7 @@ async function getDemoSession() {
           role: dbUser.role,
           organizationId: dbUser.organizationId,
           employeeId: dbUser.employee?.id,
+          canManageEmployees: dbUser.canManageEmployees,
           name: dbUser.employee ? `${dbUser.employee.firstName} ${dbUser.employee.lastName}` : undefined,
           avatarUrl: dbUser.employee?.avatarUrl ?? undefined
         };
