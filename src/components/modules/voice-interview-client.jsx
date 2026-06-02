@@ -41,7 +41,8 @@ export function VoiceInterviewClient() {
 
   const [questions, setQuestions] = useState([]);
   const [currentQ, setCurrentQ] = useState(0);
-  const [transcript, setTranscript] = useState("");
+  /** Separate answer text per question index */
+  const [answersByQuestion, setAnswersByQuestion] = useState({});
   const [listening, setListening] = useState(false);
   const [analysis, setAnalysis] = useState(null);
   const recognitionRef = useRef(null);
@@ -50,6 +51,33 @@ export function VoiceInterviewClient() {
   /** Finalized phrases from the current mic session only */
   const sessionFinalRef = useRef("");
   const listeningRef = useRef(false);
+  const currentQRef = useRef(0);
+  const answersRef = useRef({});
+
+  const currentAnswer = answersByQuestion[currentQ] ?? "";
+  const hasAnyAnswer = questions.some((_, i) => answersByQuestion[i]?.trim());
+
+  useEffect(() => {
+    currentQRef.current = currentQ;
+  }, [currentQ]);
+
+  useEffect(() => {
+    answersRef.current = answersByQuestion;
+  }, [answersByQuestion]);
+
+  function setAnswerForIndex(index, text) {
+    setAnswersByQuestion((prev) => ({ ...prev, [index]: text }));
+  }
+
+  function setCurrentAnswer(text) {
+    setAnswerForIndex(currentQRef.current, text);
+  }
+
+  function goToQuestion(index) {
+    if (index < 0 || index >= questions.length) return;
+    stopListening();
+    setCurrentQ(index);
+  }
 
   const interviewer =
     INTERVIEWERS.find((i) => i.id === interviewerId) || INTERVIEWERS[0];
@@ -116,7 +144,7 @@ export function VoiceInterviewClient() {
     setSetupError(null);
     setStarting(true);
     setAnalysis(null);
-    setTranscript("");
+    setAnswersByQuestion({});
     setCurrentQ(0);
     try {
       const res = await fetch("/api/ai/voice-interview", {
@@ -173,8 +201,9 @@ export function VoiceInterviewClient() {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      setTranscript(
-        (t) => `${t}\n[Speech recognition not supported — type your answer below]`.trim()
+      const base = answersRef.current[currentQRef.current] ?? "";
+      setCurrentAnswer(
+        `${base}\n[Speech recognition not supported — type your answer below]`.trim()
       );
       return;
     }
@@ -183,7 +212,8 @@ export function VoiceInterviewClient() {
       return;
     }
 
-    transcriptBaseRef.current = transcript.trim();
+    const qIndex = currentQRef.current;
+    transcriptBaseRef.current = (answersRef.current[qIndex] ?? "").trim();
     sessionFinalRef.current = "";
 
     const recognition = new SpeechRecognition();
@@ -206,7 +236,7 @@ export function VoiceInterviewClient() {
           interim = mergeTranscriptParts(interim, phrase, "");
         }
       }
-      setTranscript(
+      setCurrentAnswer(
         mergeTranscriptParts(
           transcriptBaseRef.current,
           sessionFinalRef.current,
@@ -234,12 +264,23 @@ export function VoiceInterviewClient() {
   }
 
   async function analyzeInterview() {
+    const fullTranscript = questions
+      .map((q, i) => {
+        const answer = answersByQuestion[i]?.trim();
+        if (!answer) return "";
+        return `Question ${i + 1} (${q.category}): ${q.question}\nAnswer: ${answer}`;
+      })
+      .filter(Boolean)
+      .join("\n\n");
+
+    if (!fullTranscript.trim()) return;
+
     const res = await fetch("/api/ai/voice-interview", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "analyze",
-        transcript,
+        transcript: fullTranscript,
         jobTitle: jobTitle.trim(),
         questions,
       }),
@@ -255,7 +296,7 @@ export function VoiceInterviewClient() {
     sessionFinalRef.current = "";
     setPhase("setup");
     setQuestions([]);
-    setTranscript("");
+    setAnswersByQuestion({});
     setAnalysis(null);
     setCurrentQ(0);
   }
@@ -412,15 +453,22 @@ export function VoiceInterviewClient() {
               <button
                 key={q.id || i}
                 type="button"
-                onClick={() => setCurrentQ(i)}
+                onClick={() => goToQuestion(i)}
                 className={cn(
                   "w-full text-left rounded-lg border p-3 text-sm transition-colors",
                   currentQ === i ? "border-primary bg-primary/5" : "hover:bg-muted"
                 )}
               >
-                <Badge variant="outline" className="mb-1 text-xs">
-                  {q.category}
-                </Badge>
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <Badge variant="outline" className="text-xs">
+                    {q.category}
+                  </Badge>
+                  {answersByQuestion[i]?.trim() ? (
+                    <span className="text-[10px] font-medium text-emerald-600 uppercase">
+                      Answered
+                    </span>
+                  ) : null}
+                </div>
                 <p className="line-clamp-2">{q.question}</p>
               </button>
             ))}
@@ -456,35 +504,31 @@ export function VoiceInterviewClient() {
               <Button
                 variant="outline"
                 disabled={currentQ >= questions.length - 1}
-                onClick={() => setCurrentQ((c) => c + 1)}
+                onClick={() => goToQuestion(currentQ + 1)}
               >
                 Next question
               </Button>
               <Button
                 variant="outline"
                 onClick={analyzeInterview}
-                disabled={!transcript.trim()}
+                disabled={!hasAnyAnswer}
               >
                 <Sparkles className="h-4 w-4" /> Analyze interview
               </Button>
             </div>
 
-            <div className="min-h-[200px] rounded-lg border bg-muted/30 p-4 text-sm">
-              {transcript || (
-                <p className="text-muted-foreground">
-                  Your spoken answers appear here. {interviewer.name} asked the
-                  question above — respond via microphone or type below.
-                </p>
-              )}
-            </div>
+            <p className="text-xs text-muted-foreground">
+              Answer for question {currentQ + 1} only — each question has its own
+              response. Switch questions to record a different answer.
+            </p>
 
             <textarea
-              className="w-full rounded-lg border bg-background p-3 text-sm min-h-[80px]"
-              placeholder="Or type your interview response..."
-              value={transcript}
+              className="w-full rounded-lg border bg-background p-3 text-sm min-h-[200px]"
+              placeholder={`Your answer for question ${currentQ + 1}… (mic or type here)`}
+              value={currentAnswer}
               onChange={(e) => {
                 const value = e.target.value;
-                setTranscript(value);
+                setCurrentAnswer(value);
                 if (listening) {
                   transcriptBaseRef.current = value;
                   sessionFinalRef.current = "";
