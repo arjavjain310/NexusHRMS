@@ -101,6 +101,17 @@ async function main() {
       pan: "CKGPJ4208M",
       stipend: 15000,
     },
+    {
+      email: "arjav@nexushrms.com",
+      role: UserRole.EMPLOYEE,
+      firstName: "Arjav",
+      lastName: "Jain",
+      code: "EMP005",
+      phone: "+91-9000000005",
+      city: "Bangalore",
+      pan: "ARJAV4208M",
+      stipend: 15000,
+    },
   ];
 
   let managerEmployeeId;

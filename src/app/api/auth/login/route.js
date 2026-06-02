@@ -100,7 +100,8 @@ export async function POST(request) {
     });
     if (!dbUser) {
       return NextResponse.json({
-        error: "This email is not registered with your company. Contact HR or complete sign up if you were invited."
+        error:
+          "This email is not in your company HR database yet. Ask an admin to add you in Neon (or run npm run db:add-user), then sign in again. If you already have a Supabase account, use Sign in — not Sign up."
       }, {
         status: 403
       });
