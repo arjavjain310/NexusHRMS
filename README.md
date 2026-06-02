@@ -92,10 +92,10 @@ Open [http://localhost:3000](http://localhost:3000)
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | admin@nexus.demo | demo1234 |
-| Senior Manager | manager@nexus.demo | demo1234 |
-| HR Recruiter | recruiter@nexus.demo | demo1234 |
-| Employee | employee@nexus.demo | demo1234 |
+| Admin | admin@nexushrms.com | (set via /signup with Supabase) |
+| Senior Manager | manager@nexushrms.com | (set via /signup) |
+| HR Recruiter | recruiter@nexushrms.com | (set via /signup) |
+| Employee | employee@nexushrms.com | (set via /signup) |
 
 ## Project Structure
 

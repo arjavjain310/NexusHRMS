@@ -69,9 +69,9 @@ export async function POST(request) {
 
 function getMockEmployees() {
   return [
-    { id: "1", employeeCode: "EMP001", firstName: "Alex", lastName: "Admin", email: "admin@nexus.demo", status: "ACTIVE", department: { name: "Engineering" }, designation: { title: "Senior Engineer" } },
-    { id: "2", employeeCode: "EMP002", firstName: "Sarah", lastName: "Chen", email: "manager@nexus.demo", status: "ACTIVE", department: { name: "Engineering" }, designation: { title: "Engineering Manager" } },
-    { id: "3", employeeCode: "EMP003", firstName: "Jordan", lastName: "Lee", email: "recruiter@nexus.demo", status: "ACTIVE", department: { name: "Human Resources" }, designation: { title: "HR Recruiter" } },
-    { id: "4", employeeCode: "EMP004", firstName: "Maya", lastName: "Patel", email: "employee@nexus.demo", status: "ACTIVE", department: { name: "Engineering" }, designation: { title: "Software Engineer" } },
+    { id: "1", employeeCode: "EMP001", firstName: "Alex", lastName: "Admin", email: "admin@nexushrms.com", status: "ACTIVE", department: { name: "Engineering" }, designation: { title: "Senior Engineer" } },
+    { id: "2", employeeCode: "EMP002", firstName: "Sarah", lastName: "Chen", email: "manager@nexushrms.com", status: "ACTIVE", department: { name: "Engineering" }, designation: { title: "Engineering Manager" } },
+    { id: "3", employeeCode: "EMP003", firstName: "Jordan", lastName: "Lee", email: "recruiter@nexushrms.com", status: "ACTIVE", department: { name: "Human Resources" }, designation: { title: "HR Recruiter" } },
+    { id: "4", employeeCode: "EMP004", firstName: "Maya", lastName: "Patel", email: "employee@nexushrms.com", status: "ACTIVE", department: { name: "Engineering" }, designation: { title: "Software Engineer" } },
   ];
 }

@@ -94,7 +94,7 @@ export function VoiceInterviewClient() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Volume2 className="h-5 w-5" />
-              {questions[currentQ].question || "Loading..."}
+              {questions[currentQ]?.question || "Loading questions..."}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">

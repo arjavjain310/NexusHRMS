@@ -64,7 +64,7 @@ export function EmployeeProfile({
                 {status.label}
               </Badge>
             </div>
-            <p className="text-white/80 mt-1">{employee.designation.title || "Employee"}</p>
+            <p className="text-white/80 mt-1">{employee.designation?.title || "Employee"}</p>
             <div className="flex flex-wrap gap-4 mt-4 text-sm text-white/70">
               <span className="flex items-center gap-1.5">
                 <Mail className="h-4 w-4" /> {employee.email}
@@ -91,7 +91,7 @@ export function EmployeeProfile({
         icon: Building2
       }, {
         label: "Department",
-        value: employee.department.name || "—",
+        value: employee.department?.name || "—",
         icon: Building2
       }, {
         label: "Sub Department",
@@ -193,7 +193,7 @@ export function EmployeeProfile({
                 </div>
                 <div>
                   <p className="text-muted-foreground">Designation</p>
-                  <p className="font-medium">{employee.designation.title}</p>
+                  <p className="font-medium">{employee.designation?.title || "—"}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Employee ID</p>

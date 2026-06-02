@@ -64,7 +64,7 @@ async function main() {
 
   const demoUsers = [
     {
-      email: "admin@nexus.demo",
+      email: "admin@nexushrms.com",
       role: UserRole.ADMIN,
       firstName: "Alex",
       lastName: "Admin",
@@ -73,7 +73,7 @@ async function main() {
       city: "Bangalore",
     },
     {
-      email: "manager@nexus.demo",
+      email: "manager@nexushrms.com",
       role: UserRole.SENIOR_MANAGER,
       firstName: "Sarah",
       lastName: "Chen",
@@ -82,7 +82,7 @@ async function main() {
       city: "Bangalore",
     },
     {
-      email: "recruiter@nexus.demo",
+      email: "recruiter@nexushrms.com",
       role: UserRole.HR_RECRUITER,
       firstName: "Jordan",
       lastName: "Lee",
@@ -91,7 +91,7 @@ async function main() {
       city: "Mumbai",
     },
     {
-      email: "employee@nexus.demo",
+      email: "employee@nexushrms.com",
       role: UserRole.EMPLOYEE,
       firstName: "Maya",
       lastName: "Patel",

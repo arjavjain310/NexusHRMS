@@ -79,14 +79,20 @@ export async function POST(request) {
       email,
       password
     });
-    if (error) return NextResponse.json({
-      error: error.message
-    }, {
-      status: 401
-    });
-    const dbUser = await prisma.user.findUnique({
+    if (error) {
+      let message = error.message;
+      if (/not confirmed/i.test(message)) {
+        message =
+          "Email not confirmed. In Supabase: Authentication → Users → select your user → confirm, or turn off Confirm email under Authentication → Email. You can also delete the user and re-add with Auto Confirm enabled.";
+      }
+      if (/rate limit/i.test(message)) {
+        message = "Too many attempts. Wait 30–60 minutes or add the user manually in Supabase → Authentication → Users.";
+      }
+      return NextResponse.json({ error: message }, { status: 401 });
+    }
+    const dbUser = await prisma.user.findFirst({
       where: {
-        email: data.user.email
+        email: { equals: data.user.email, mode: "insensitive" },
       },
       include: {
         employee: true

@@ -91,7 +91,7 @@ export async function POST(request) {
   const session = await getSession();
   if (!session.employeeId) {
     return NextResponse.json({
-      error: "No employee profile on your session. Please log out and sign in again with employee@nexus.demo (password: demo1234)."
+      error: "No employee profile on your session. Please log out and sign in with an employee account."
     }, {
       status: 403
     });

@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 const employee = await prisma.employee.findFirst({
-  where: { email: "employee@nexus.demo" },
+  where: { email: "employee@nexushrms.com" },
 });
 
 if (!employee) {

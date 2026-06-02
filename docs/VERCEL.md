@@ -69,7 +69,19 @@ Enable for **Production** (and **Preview** if you want preview deployments to wo
 2. Employee opens `/signup` → sets password (email must match Neon).
 3. Employee signs in at `/login`.
 
-In Supabase: **Authentication → Providers → Email** enabled. For internal HRMS, you can disable “Confirm email” under email settings so signup works immediately.
+In Supabase: **Authentication → Providers → Email** enabled.
+
+**Required for signup/login without errors:**
+
+1. **Authentication → Providers → Email** → turn **OFF** “Confirm email”
+2. If a user already exists as unconfirmed: **Authentication → Users** → delete `admin@nexushrms.com` → **Add user** with **Auto Confirm User** checked
+3. Or run in Supabase **SQL Editor** (not Neon):
+
+```sql
+UPDATE auth.users
+SET email_confirmed_at = now(), confirmed_at = now()
+WHERE email = 'admin@nexushrms.com';
+```
 
 ## 4. Database setup (one time)
 
@@ -86,8 +98,8 @@ This creates tables and demo users in Neon. Vercel does not run seed automatical
 
 | Email | Password |
 |-------|----------|
-| admin@nexus.demo | demo1234 |
-| employee@nexus.demo | demo1234 |
+| admin@nexushrms.com | sign up at /signup |
+| employee@nexushrms.com | sign up at /signup |
 
 ## 4. Deploy
 

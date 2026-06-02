@@ -75,7 +75,11 @@ export async function GET(_request, {
       }
     });
     let attendanceStatus = "NOT_IN_YET";
-    if (todayAttendance.checkIn && todayAttendance.checkOut) attendanceStatus = "CLOCKED_OUT";else if (todayAttendance.checkIn) attendanceStatus = "CLOCKED_IN";
+    if (todayAttendance?.checkIn && todayAttendance?.checkOut) {
+      attendanceStatus = "CLOCKED_OUT";
+    } else if (todayAttendance?.checkIn) {
+      attendanceStatus = "CLOCKED_IN";
+    }
     return NextResponse.json({
       success: true,
       data: {

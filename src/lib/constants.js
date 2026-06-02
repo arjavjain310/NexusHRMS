@@ -17,10 +17,10 @@ export const ROLE_LABELS = {
 };
 
 export const DEMO_CREDENTIALS = [
-  { email: "admin@nexus.demo", password: "demo1234", role: "ADMIN"  },
-  { email: "manager@nexus.demo", password: "demo1234", role: "SENIOR_MANAGER"  },
-  { email: "recruiter@nexus.demo", password: "demo1234", role: "HR_RECRUITER"  },
-  { email: "employee@nexus.demo", password: "demo1234", role: "EMPLOYEE"  },
+  { email: "admin@nexushrms.com", password: "demo1234", role: "ADMIN"  },
+  { email: "manager@nexushrms.com", password: "demo1234", role: "SENIOR_MANAGER"  },
+  { email: "recruiter@nexushrms.com", password: "demo1234", role: "HR_RECRUITER"  },
+  { email: "employee@nexushrms.com", password: "demo1234", role: "EMPLOYEE"  },
 ];
 
 export const NAV_ITEMS = [

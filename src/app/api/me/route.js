@@ -9,7 +9,7 @@ export async function GET() {
 
   if (!session.employeeId) {
     return NextResponse.json(
-      { error: "No employee profile linked. Use employee@nexus.demo to sign in." },
+      { error: "No employee profile linked. Sign in with an employee account." },
       { status: 404 }
     );
   }

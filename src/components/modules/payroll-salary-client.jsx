@@ -9,9 +9,9 @@ export function PayrollSalaryClient() {
   useEffect(() => {
     fetch("/api/payroll").then(r => r.json()).then(j => setData(j.data));
   }, []);
-  const s = data.structure;
+  const s = data?.structure;
   const gross = s ? s.baseSalary + s.hra + s.allowances : 0;
-  const net = s ? gross - s.deductions : 0;
+  const net = s ? gross - (s.deductions || 0) : 0;
   return <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">My Pay</h1>

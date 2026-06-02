@@ -29,7 +29,7 @@ export function PayrollTaxClient() {
       <div>
         <h1 className="text-2xl font-semibold">Income Tax</h1>
         <p className="text-muted-foreground mt-1">
-          Tax computation based on {tax.regime || "New Tax Regime"}
+          Tax computation based on {tax?.regime || "New Tax Regime"}
         </p>
       </div>
       <ModuleSubNav items={PAYROLL_TABS} />

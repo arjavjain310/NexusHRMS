@@ -17,9 +17,9 @@ export async function getSession() {
       }
     } = await supabase.auth.getUser();
     if (!user.email) return null;
-    const dbUser = await prisma.user.findUnique({
+    const dbUser = await prisma.user.findFirst({
       where: {
-        email: user.email
+        email: { equals: user.email, mode: "insensitive" },
       },
       include: {
         employee: {

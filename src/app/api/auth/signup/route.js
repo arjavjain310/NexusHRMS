@@ -65,7 +65,16 @@ export async function POST(request) {
     });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      let message = error.message;
+      if (/is invalid/i.test(message) && /\.demo$/i.test(normalizedEmail.split("@")[1] || "")) {
+        message =
+          "Supabase does not allow .demo email addresses. Use a real work email, or seeded accounts like admin@nexushrms.com after your database is updated.";
+      }
+      if (/rate limit/i.test(message)) {
+        message =
+          "Supabase email rate limit reached. Wait 30–60 minutes, or in Supabase go to Authentication → Email → disable Confirm email, then try again. You can also add the user manually under Authentication → Users.";
+      }
+      return NextResponse.json({ error: message }, { status: 400 });
     }
 
     if (data.user) {

@@ -98,7 +98,7 @@ export function AttendanceClient() {
       if (!json.employeeId) {
         setMessage({
           type: "error",
-          text: "Your session has no employee profile. Log out and sign in with employee@nexus.demo"
+          text: "Your session has no employee profile. Log out and sign in with an employee account"
         });
       }
     } catch (e) {
@@ -154,12 +154,14 @@ export function AttendanceClient() {
           setTodayRecord(saved);
         }
       }
-      setStatus({
-        checkedIn: !!json.data.checkIn,
-        checkedOut: !!json.data.checkOut,
-        canCheckIn: !json.data.checkIn || !!json.data.checkOut,
-        canCheckOut: !!json.data.checkIn && !json.data.checkOut
-      });
+      if (json.data) {
+        setStatus({
+          checkedIn: !!json.data.checkIn,
+          checkedOut: !!json.data.checkOut,
+          canCheckIn: !json.data.checkIn || !!json.data.checkOut,
+          canCheckOut: !!json.data.checkIn && !json.data.checkOut,
+        });
+      }
       await loadAttendance();
     } catch (e2) {
       setMessage({
@@ -181,12 +183,12 @@ export function AttendanceClient() {
     return `${h}h ${m}m`;
   }, [records]);
   const todayDuration = useMemo(() => {
-    if (!todayRecord.checkIn) return null;
+    if (!todayRecord?.checkIn) return null;
     const end = todayRecord.checkOut ? new Date(todayRecord.checkOut) : new Date();
     return formatDurationMs(end.getTime() - new Date(todayRecord.checkIn).getTime());
   }, [todayRecord]);
   const shiftProgress = useMemo(() => {
-    if (!todayRecord.checkIn) return 0;
+    if (!todayRecord?.checkIn) return 0;
     const start = new Date(todayRecord.checkIn).getTime();
     const end = todayRecord.checkOut ? new Date(todayRecord.checkOut).getTime() : Date.now();
     const target = 9 * 3600000;
@@ -243,14 +245,14 @@ export function AttendanceClient() {
             <div className="flex justify-between gap-1">
               {weekDays.map(d => {
               const rec = recordsByDay.get(d.toDateString());
-              const hasAttendance = !!rec.checkIn;
+              const hasAttendance = !!rec?.checkIn;
               return <div key={d.toISOString()} className={cn("flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium", isToday(d) && "bg-primary text-primary-foreground", !isToday(d) && hasAttendance && "bg-emerald-100 text-emerald-700", !isToday(d) && !hasAttendance && "text-muted-foreground")} title={format(d, "EEE, d MMM")}>
                     {format(d, "EEEEE")}
                   </div>;
             })}
             </div>
             <div>
-              {todayRecord.checkIn ? <>
+              {todayRecord?.checkIn ? <>
                   <p className="text-sm font-medium">
                     Today · In {formatTime(todayRecord.checkIn, hour12)}
                     {todayRecord.checkOut ? ` · Out ${formatTime(todayRecord.checkOut, hour12)}` : " · Active"}
