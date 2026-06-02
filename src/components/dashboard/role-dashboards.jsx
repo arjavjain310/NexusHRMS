@@ -89,6 +89,13 @@ function ManagerDashboard({
       </div>
     </div>;
 }
+function pipelineCount(pipeline, status) {
+  const row = (pipeline || []).find((p) => p.status === status);
+  const count = row?._count;
+  if (typeof count === "number") return count;
+  if (count && typeof count === "object" && "_all" in count) return count._all ?? 0;
+  return 0;
+}
 function RecruiterDashboard({
   data
 }) {
@@ -96,8 +103,8 @@ function RecruiterDashboard({
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard title="Open Candidates" value={data.candidates} icon={Briefcase} />
         <StatCard title="AI Shortlisted" value={data.shortlisted} trend="up" change="Top matches" icon={FileSearch} />
-        <StatCard title="In Screening" value={data.pipeline.find(p => p.status === "SCREENING")._count || 0} icon={UserCheck} />
-        <StatCard title="Interviews" value={data.pipeline.find(p => p.status === "INTERVIEW")._count || 0} icon={Building2} />
+        <StatCard title="In Screening" value={pipelineCount(data.pipeline, "SCREENING")} icon={UserCheck} />
+        <StatCard title="Interviews" value={pipelineCount(data.pipeline, "INTERVIEW")} icon={Building2} />
       </div>
       <Card>
         <CardHeader>
@@ -107,7 +114,7 @@ function RecruiterDashboard({
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {(data.pipeline || []).map(p => <div key={p.status} className="rounded-lg border p-4 text-center">
-                <p className="text-2xl font-semibold">{p._count}</p>
+                <p className="text-2xl font-semibold">{pipelineCount(data.pipeline, p.status)}</p>
                 <p className="text-xs text-muted-foreground mt-1">{p.status.replace("_", " ")}</p>
               </div>)}
           </div>

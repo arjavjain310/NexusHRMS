@@ -17,7 +17,7 @@ export default async function DashboardPage() {
     data = getMockDashboardData(session.role);
   }
   return <div>
-      <PageHeader title={`Good ${getGreeting()}, ${session.name.split(" ")[0] || "there"}`} description={`${ROLE_LABELS[session.role]} dashboard — overview of your HR workspace`} />
+      <PageHeader title={`Good ${getGreeting()}, ${session.name?.split(" ")[0] || session.email?.split("@")[0] || "there"}`} description={`${ROLE_LABELS[session.role]} dashboard — overview of your HR workspace`} />
       <RoleDashboard role={session.role} data={data} />
     </div>;
 }

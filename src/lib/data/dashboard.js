@@ -71,11 +71,15 @@ export async function getDashboardData(organizationId, role, employeeId) {
   }
 
   if (role === "HR_RECRUITER") {
-    const pipeline = await prisma.candidate.groupBy({
+    const grouped = await prisma.candidate.groupBy({
       by: ["status"],
       where: { jobPost: { organizationId } },
-      _count: true,
+      _count: { _all: true },
     });
+    const pipeline = grouped.map((row) => ({
+      status: row.status,
+      _count: row._count?._all ?? 0,
+    }));
     return { ...base, pipeline };
   }
 
@@ -134,7 +138,7 @@ async function getPerformanceChart(organizationId) {
   }
 
   return reviews.slice(0, 6).map((r) => ({
-    name: r.employee.firstName,
+    name: r.employee ? `${r.employee.firstName} ${r.employee.lastName}`.trim() : "Review",
     value: Math.round((r.rating || 3.5) * 20),
   }));
 }
