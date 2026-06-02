@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/brand/logo";
-import { Sparkles, Users, Bot, Mic, ArrowRight } from "lucide-react";
+import { Sparkles, Users, Bot, Mic } from "lucide-react";
 
 export default function HomePage() {
   return (
@@ -32,16 +32,6 @@ export default function HomePage() {
             Automate recruitment, attendance, payroll, and performance with an elegant
             enterprise experience inspired by the best in HR tech.
           </p>
-          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Button size="lg" asChild>
-              <Link href="/login">
-                Launch Demo <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link href="/dashboard">View Dashboard</Link>
-            </Button>
-          </div>
         </div>
 
         <div className="mt-24 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
