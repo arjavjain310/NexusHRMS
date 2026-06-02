@@ -52,6 +52,9 @@ export default function LoginPage() {
           <Logo variant="mark" priority showTitle className="h-10 w-10" />
         </div>
         <div>
+          <p className="text-lg font-bold tracking-wide uppercase mb-4">
+            WELCOME TO NEXUS-HRMS
+          </p>
           <h2 className="text-3xl font-bold leading-tight">
             The modern AI-first HR platform for growing companies.
           </h2>

@@ -70,6 +70,24 @@ enum GoalStatus {
   CANCELLED
 }
 
+enum NotificationType {
+  LEAVE_APPROVED
+  LEAVE_REJECTED
+  LEAVE_PENDING
+  PAYROLL_PUBLISHED
+  INTERVIEW_SCHEDULED
+  POLICY_UPDATE
+  ATTENDANCE_CORRECTION_APPROVED
+  ATTENDANCE_CORRECTION_REJECTED
+  ATTENDANCE_CORRECTION_PENDING
+}
+
+enum CorrectionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model Organization {
   id        String   @id @default(cuid())
   name      String
@@ -95,9 +113,10 @@ model User {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  employee     Employee?
-  chatMessages ChatMessage[]
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  employee      Employee?
+  chatMessages  ChatMessage[]
+  notifications Notification[]
 
   @@index([organizationId])
   @@index([role])
@@ -182,7 +201,8 @@ model Employee {
   goals          Goal[]
   reviews        PerformanceReview[] @relation("ReviewEmployee")
   reviewsGiven   PerformanceReview[] @relation("ReviewManager")
-  announcements  AnnouncementRead[]
+  announcements         AnnouncementRead[]
+  attendanceCorrections AttendanceCorrection[]
 
   @@unique([organizationId, employeeCode])
   @@unique([organizationId, email])
@@ -443,4 +463,37 @@ model ActivityLog {
   createdAt      DateTime @default(now())
 
   @@index([organizationId, createdAt])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  href      String?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read, createdAt])
+}
+
+model AttendanceCorrection {
+  id           String           @id @default(cuid())
+  employeeId   String
+  date         DateTime         @db.Date
+  reason       String
+  status       CorrectionStatus @default(PENDING)
+  reviewedById String?
+  rejectReason String?
+  reviewedAt   DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@index([status])
 }

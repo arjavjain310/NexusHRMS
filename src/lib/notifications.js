@@ -1,0 +1,52 @@
+import { prisma } from "@/lib/prisma";
+
+export async function createNotification({ userId, type, title, message, href }) {
+  try {
+    return await prisma.notification.create({
+      data: { userId, type, title, message, href: href ?? null },
+    });
+  } catch (e) {
+    console.error("[createNotification]", e);
+    return null;
+  }
+}
+
+export async function logActivity(organizationId, { userId, action, entity, entityId, metadata }) {
+  try {
+    return await prisma.activityLog.create({
+      data: {
+        organizationId,
+        userId: userId ?? null,
+        action,
+        entity: entity ?? null,
+        entityId: entityId ?? null,
+        metadata: metadata ?? undefined,
+      },
+    });
+  } catch (e) {
+    console.error("[logActivity]", e);
+    return null;
+  }
+}
+
+/** Notify admins and senior managers in the organization */
+export async function notifyApprovers(organizationId, payload) {
+  const approvers = await prisma.user.findMany({
+    where: {
+      organizationId,
+      role: { in: ["ADMIN", "SENIOR_MANAGER"] },
+    },
+    select: { id: true },
+  });
+  await Promise.all(
+    approvers.map((u) => createNotification({ userId: u.id, ...payload }))
+  );
+}
+
+export async function getEmployeeUserId(employeeId) {
+  const emp = await prisma.employee.findUnique({
+    where: { id: employeeId },
+    select: { userId: true },
+  });
+  return emp?.userId ?? null;
+}

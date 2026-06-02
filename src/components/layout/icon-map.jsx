@@ -12,7 +12,7 @@ import {
   PartyPopper,
   Settings,
   User,
-
+  ClipboardCheck,
 } from "lucide-react";
 
 const ICON_MAP = {
@@ -29,6 +29,7 @@ const ICON_MAP = {
   Mic,
   PartyPopper,
   Settings,
+  ClipboardCheck,
 };
 
 export function getNavIcon(name) {

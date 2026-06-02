@@ -4,20 +4,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { AttendanceAreaChart, PerformanceBarChart } from "./charts";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
-export function RoleDashboard({
-  role,
-  data
-}) {
-  switch (role) {
-    case "ADMIN":
-      return <AdminDashboard data={data} />;
-    case "SENIOR_MANAGER":
-      return <ManagerDashboard data={data} />;
-    case "HR_RECRUITER":
-      return <RecruiterDashboard data={data} />;
-    default:
-      return <EmployeeDashboard data={data} />;
-  }
+import { RecentActivity } from "./recent-activity";
+
+export function RoleDashboard({ role, data }) {
+  return (
+    <div className="space-y-8">
+      {role === "ADMIN" ? (
+        <AdminDashboard data={data} />
+      ) : role === "SENIOR_MANAGER" ? (
+        <ManagerDashboard data={data} />
+      ) : role === "HR_RECRUITER" ? (
+        <RecruiterDashboard data={data} />
+      ) : (
+        <EmployeeDashboard data={data} />
+      )}
+      <RecentActivity
+        showApprovalsLink={role === "ADMIN" || role === "SENIOR_MANAGER"}
+      />
+    </div>
+  );
 }
 function AdminDashboard({
   data

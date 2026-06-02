@@ -9,28 +9,40 @@ export function PayslipView({
   orgName
 }) {
   const emp = payslip.employee;
-  const monthLabel = MONTHS[payslip.month - 1].toUpperCase() || "";
-  const earnings = payslip.earningsDetail.items || [{
+  const monthLabel = MONTHS[payslip.month - 1]?.toUpperCase() || "";
+  const detail = payslip.earningsDetail || {};
+  const earnings = detail.items || [{
     name: "Basic Salary",
     amount: payslip.baseSalary
   }];
-  const deducts = payslip.earningsDetail.deductions || [{
+  const deducts = detail.deductions || [{
     name: "Deductions",
     amount: payslip.deductions
   }];
-  const gross = earnings.reduce((s, i) => s + i.amount, 0);
-  return <div className="bg-white text-black rounded-lg border shadow-sm overflow-hidden text-sm">
+  const gross = earnings.reduce((s, i) => s + (i.amount || 0), 0);
+
+  function handleDownload() {
+    window.print();
+  }
+
+  return <div id="payslip-print" className="bg-white text-black rounded-lg border shadow-sm overflow-hidden text-sm">
       <div className="bg-slate-700 text-white px-6 py-3 flex justify-between items-center print:hidden">
         <span>
           {monthLabel} {payslip.year}
         </span>
-        <Button size="sm" variant="secondary" className="gap-2">
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          className="gap-2"
+          onClick={handleDownload}
+        >
           <Download className="h-4 w-4" />
-          {monthLabel} {payslip.year} Pay Slip
+          Download PDF
         </Button>
       </div>
 
-      <div className="p-8 space-y-6">
+      <div className="p-8 space-y-6 payslip-body">
         <div className="text-center border-b pb-4">
           <p className="text-xs text-gray-500 tracking-widest">PAYSLIP {monthLabel} {payslip.year}</p>
           <h2 className="text-lg font-bold mt-2">{orgName || emp.organization.name || "Nexus Technologies Pvt Ltd"}</h2>
@@ -44,11 +56,11 @@ export function PayslipView({
             <Row label="Name" value={`${emp.firstName || ""} ${emp.lastName || ""}`} />
             <Row label="Employee Number" value={emp.employeeCode} />
             <Row label="Date Joined" value={emp.dateOfJoining ? formatDate(emp.dateOfJoining) : "—"} />
-            <Row label="Department" value={emp.department.name} />
+            <Row label="Department" value={emp.department?.name} />
             <Row label="Sub Department" value={emp.subDepartment} />
           </div>
           <div className="space-y-2">
-            <Row label="Designation" value={emp.designation.title} />
+            <Row label="Designation" value={emp.designation?.title} />
             <Row label="Payment Mode" value={emp.paymentMode || "Bank Transfer"} />
             <Row label="UAN" value={emp.uan || "N/A"} />
             <Row label="PF Number" value={emp.pfNumber || "N/A"} />

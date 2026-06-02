@@ -1,11 +1,12 @@
 "use client";
 
-import { Bell, LogOut, Menu, Search } from "lucide-react";
+import { LogOut, Menu, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ThemeToggle } from "./theme-toggle";
+import { NotificationsMenu } from "./notifications-menu";
 import { ROLE_LABELS } from "@/lib/constants";
 import { getInitials } from "@/lib/utils";
 export function Header({
@@ -35,9 +36,7 @@ export function Header({
 
       <div className="ml-auto flex items-center gap-2">
         <ThemeToggle />
-        <Button variant="ghost" size="icon" aria-label="Notifications">
-          <Bell className="h-5 w-5" />
-        </Button>
+        <NotificationsMenu />
 
         <div className="hidden items-center gap-3 border-l pl-4 sm:flex">
           <Avatar className="h-9 w-9">

@@ -6,7 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn, formatDateShort, formatDurationBetween, formatDurationMs, formatTime } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { cn, formatDate, formatDateShort, formatDurationBetween, formatDurationMs, formatTime } from "@/lib/utils";
 import { Clock, Globe, Laptop, LogOut, MoreHorizontal, User, FileText, Loader2 } from "lucide-react";
 import { format, startOfWeek, eachDayOfInterval, isToday, addDays } from "date-fns";
 import { ModuleSubNav, ME_MODULE_TABS } from "@/components/layout/module-sub-nav";
@@ -65,6 +69,9 @@ export function AttendanceClient() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
   const [message, setMessage] = useState(null);
+  const [corrections, setCorrections] = useState([]);
+  const [correctionForm, setCorrectionForm] = useState({ date: "", reason: "" });
+  const [correctionLoading, setCorrectionLoading] = useState(false);
   const weekStart = startOfWeek(new Date(), {
     weekStartsOn: 1
   });
@@ -112,7 +119,33 @@ export function AttendanceClient() {
   }, []);
   useEffect(() => {
     loadAttendance();
+    fetch("/api/attendance/corrections")
+      .then((r) => r.json())
+      .then((j) => setCorrections(j.data || []));
   }, [loadAttendance]);
+
+  async function submitCorrection(e) {
+    e.preventDefault();
+    setCorrectionLoading(true);
+    try {
+      const res = await fetch("/api/attendance/corrections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(correctionForm),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setMessage({ type: "error", text: json.error || "Request failed" });
+        return;
+      }
+      setMessage({ type: "success", text: "Correction request sent to your manager." });
+      setCorrectionForm({ date: "", reason: "" });
+      const list = await fetch("/api/attendance/corrections").then((r) => r.json());
+      setCorrections(list.data || []);
+    } finally {
+      setCorrectionLoading(false);
+    }
+  }
   async function handleClock(action, source = "web") {
     setActionLoading(`${action}-${source}`);
     setMessage(null);
@@ -405,10 +438,74 @@ export function AttendanceClient() {
               </div>
             </TabsContent>
 
-            <TabsContent value="requests">
-              <div className="rounded-lg border p-8 text-center text-muted-foreground">
-                <p>No attendance adjustment requests</p>
-                <p className="text-xs mt-2">Corrections can be added in a future release</p>
+            <TabsContent value="requests" className="space-y-6">
+              <form onSubmit={submitCorrection} className="rounded-lg border p-4 space-y-4 max-w-lg">
+                <p className="font-medium text-sm">Request attendance correction</p>
+                <p className="text-xs text-muted-foreground">
+                  Use this if you forgot to clock in/out or need a record updated.
+                </p>
+                <div className="space-y-2">
+                  <Label htmlFor="corr-date">Date</Label>
+                  <Input
+                    id="corr-date"
+                    type="date"
+                    required
+                    value={correctionForm.date}
+                    onChange={(e) =>
+                      setCorrectionForm({ ...correctionForm, date: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="corr-reason">Reason</Label>
+                  <Textarea
+                    id="corr-reason"
+                    required
+                    placeholder="e.g. Forgot to clock out after client meeting"
+                    value={correctionForm.reason}
+                    onChange={(e) =>
+                      setCorrectionForm({ ...correctionForm, reason: e.target.value })
+                    }
+                  />
+                </div>
+                <Button type="submit" disabled={correctionLoading}>
+                  {correctionLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Submit request"
+                  )}
+                </Button>
+              </form>
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Your requests</p>
+                {corrections.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No correction requests yet</p>
+                ) : (
+                  corrections.map((c) => (
+                    <div
+                      key={c.id}
+                      className="flex items-center justify-between rounded-lg border px-4 py-3 text-sm"
+                    >
+                      <div>
+                        <p className="font-medium">{formatDate(c.date)}</p>
+                        <p className="text-muted-foreground text-xs mt-1 line-clamp-2">
+                          {c.reason}
+                        </p>
+                      </div>
+                      <Badge
+                        variant={
+                          c.status === "APPROVED"
+                            ? "success"
+                            : c.status === "REJECTED"
+                              ? "destructive"
+                              : "warning"
+                        }
+                      >
+                        {c.status}
+                      </Badge>
+                    </div>
+                  ))
+                )}
               </div>
             </TabsContent>
           </Tabs>

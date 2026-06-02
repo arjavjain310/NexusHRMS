@@ -261,6 +261,99 @@ async function main() {
     },
   }).catch(() => {});
 
+  const demoUserRows = await prisma.user.findMany({
+    where: { organizationId: org.id },
+    include: { employee: { select: { firstName: true, lastName: true } } },
+  });
+
+  const admin = demoUserRows.find((u) => u.email === "arjav@nexushrms.com");
+  const manager = demoUserRows.find((u) => u.email === "manager@nexushrms.com");
+  const employee = demoUserRows.find((u) => u.email === "employee@nexushrms.com");
+
+  if (employee) {
+    await prisma.notification.createMany({
+      data: [
+        {
+          userId: employee.id,
+          type: "PAYROLL_PUBLISHED",
+          title: "Payslip published",
+          message: "Your April 2026 payslip is ready to download.",
+          href: "/payroll/payslips",
+          read: false,
+        },
+        {
+          userId: employee.id,
+          type: "LEAVE_APPROVED",
+          title: "Leave approved",
+          message: "Your casual leave for 12 Jun was approved by Sarah Chen.",
+          href: "/leave",
+          read: true,
+        },
+        {
+          userId: employee.id,
+          type: "POLICY_UPDATE",
+          title: "Policy update",
+          message: "Updated remote work policy — review in Documents.",
+          href: "/me/profile",
+          read: false,
+        },
+        {
+          userId: employee.id,
+          type: "INTERVIEW_SCHEDULED",
+          title: "Interview scheduled",
+          message: "Technical round scheduled for Full Stack Developer role.",
+          href: "/recruitment",
+          read: false,
+        },
+      ],
+    }).catch(() => {});
+  }
+
+  if (manager) {
+    await prisma.notification.createMany({
+      data: [
+        {
+          userId: manager.id,
+          type: "LEAVE_PENDING",
+          title: "Leave pending approval",
+          message: "Maya Patel requested casual leave — review in Approvals.",
+          href: "/approvals",
+          read: false,
+        },
+      ],
+    }).catch(() => {});
+  }
+
+  const activitySeed = [
+    {
+      action: "payroll_published",
+      metadata: { employeeName: "Maya Patel", month: "April", year: 2026 },
+    },
+    {
+      action: "leave_approved",
+      metadata: { employeeName: "Maya Patel" },
+    },
+    {
+      action: "policy_update",
+      metadata: { title: "Remote work policy v2" },
+    },
+    {
+      action: "interview_scheduled",
+      metadata: { role: "Full Stack Developer" },
+    },
+  ];
+
+  for (const a of activitySeed) {
+    await prisma.activityLog.create({
+      data: {
+        organizationId: org.id,
+        userId: admin?.id ?? null,
+        action: a.action,
+        metadata: a.metadata,
+      },
+    }).catch(() => {});
+  }
+
   console.log("Seed completed for", org.name);
 }
 

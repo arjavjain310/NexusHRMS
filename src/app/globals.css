@@ -67,3 +67,21 @@
     @apply bg-background text-foreground antialiased;
   }
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #payslip-print,
+  #payslip-print * {
+    visibility: visible;
+  }
+  #payslip-print {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    border: none;
+    box-shadow: none;
+  }
+}
