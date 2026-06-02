@@ -112,9 +112,18 @@ export async function POST(request) {
   try {
     const existing = await findTodayRecord(session.employeeId);
     if (action === "check-in") {
-      if (existing.checkIn && !existing.checkOut) {
+      if (existing?.checkIn && !existing?.checkOut) {
+        const active = serializeAttendanceRecord(existing);
         return NextResponse.json({
-          error: "You are already clocked in today"
+          error: "You are already clocked in today",
+          data: active,
+          today: active,
+          status: {
+            checkedIn: true,
+            checkedOut: false,
+            canCheckIn: false,
+            canCheckOut: true
+          }
         }, {
           status: 409
         });
@@ -153,7 +162,7 @@ export async function POST(request) {
         message: "Clocked in successfully"
       });
     }
-    if (!existing.checkIn) {
+    if (!existing?.checkIn) {
       return NextResponse.json({
         error: "Please clock in before clocking out"
       }, {

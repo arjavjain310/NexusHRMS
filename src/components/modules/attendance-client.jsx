@@ -129,10 +129,22 @@ export function AttendanceClient() {
       });
       const json = await res.json();
       if (!res.ok) {
+        if (json.today || json.data) {
+          const active = json.today || json.data;
+          setTodayRecord(active);
+          setStatus(json.status || {
+            checkedIn: !!active.checkIn,
+            checkedOut: !!active.checkOut,
+            canCheckIn: !active.checkIn || !!active.checkOut,
+            canCheckOut: !!active.checkIn && !active.checkOut
+          });
+          if (json.records?.length) setRecords(json.records);
+        }
         setMessage({
           type: "error",
           text: json.error || "Action failed"
         });
+        await loadAttendance();
         return;
       }
       setMessage({

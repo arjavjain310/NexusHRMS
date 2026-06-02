@@ -23,8 +23,8 @@ export function isSameAttendanceDay(a, b) {
 export function serializeAttendanceRecord(record) {
   return {
     ...record,
-    date: record.date.toISOString(),
-    checkIn: record.checkIn.toISOString() ?? null,
-    checkOut: record.checkOut.toISOString() ?? null
+    date: record.date instanceof Date ? record.date.toISOString() : record.date,
+    checkIn: record.checkIn ? record.checkIn.toISOString() : null,
+    checkOut: record.checkOut ? record.checkOut.toISOString() : null
   };
 }
