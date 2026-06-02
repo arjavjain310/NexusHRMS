@@ -1,9 +1,23 @@
 import { getOpenAIChat, getChatModel } from "./openai";
-export async function generateInterviewQuestions(jobTitle, skills, count = 5) {
+export async function generateInterviewQuestions(
+  jobTitle,
+  skills,
+  count = 5,
+  options = {}
+) {
+  const { jobDescription = "", resumeText = "" } = options;
   const openai = getOpenAIChat();
   if (!openai) {
     return mockQuestions(jobTitle, count);
   }
+  const contextParts = [
+    `Role: ${jobTitle}.`,
+    skills.length ? `Skills: ${skills.join(", ")}.` : "",
+    jobDescription ? `Job description:\n${jobDescription.slice(0, 2500)}` : "",
+    resumeText ? `Candidate resume:\n${resumeText.slice(0, 2500)}` : "",
+    `Generate ${count} interview questions mixing behavioral and technical.`,
+  ].filter(Boolean);
+
   const completion = await openai.chat.completions.create({
     model: getChatModel(),
     response_format: {
@@ -14,7 +28,7 @@ export async function generateInterviewQuestions(jobTitle, skills, count = 5) {
       content: "Generate interview questions as JSON: { questions: [{ id, question, category }] }"
     }, {
       role: "user",
-      content: `Role: ${jobTitle}. Skills: ${skills.join(", ")}. Generate ${count} questions mixing behavioral and technical.`
+      content: contextParts.join("\n\n")
     }]
   });
   const raw = JSON.parse(completion.choices[0].message.content || "{}");

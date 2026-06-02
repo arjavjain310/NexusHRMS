@@ -34,7 +34,7 @@ export const NAV_ITEMS = [
   { title: "Recruitment", href: "/recruitment", icon: "Briefcase", roles: ["ADMIN", "HR_RECRUITER", "SENIOR_MANAGER"] },
   { title: "Resume AI", href: "/recruitment/resume-screening", icon: "FileSearch", roles: ["ADMIN", "HR_RECRUITER"] },
   { title: "AI Assistant", href: "/ai-assistant", icon: "Bot" },
-  { title: "Voice Interview", href: "/recruitment/voice-interview", icon: "Mic", roles: ["ADMIN", "HR_RECRUITER"] },
+  { title: "Voice Interview", href: "/recruitment/voice-interview", icon: "Mic", roles: ["ADMIN", "HR_RECRUITER", "EMPLOYEE"] },
   { title: "Holidays", href: "/holidays", icon: "PartyPopper" },
   { title: "Settings", href: "/settings", icon: "Settings", roles: ["ADMIN"] },
 ];
