@@ -105,20 +105,20 @@ export function EmployeeProfile({
 
   const fallbackBio = `${employee.firstName} is a valued member of ${employee.organization?.name || "the organization"}.`;
 
-  return <div className="space-y-0 -m-4 lg:-m-8">
+  return <div className="space-y-0 -mx-4 lg:-mx-8">
       {/* Banner */}
-      <div className="relative bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600 text-white px-4 lg:px-8 pt-8 pb-24">
-        <div className="flex flex-col sm:flex-row gap-6 items-start">
-          <Avatar className="h-24 w-24 border-4 border-white/20">
+      <div className="relative rounded-xl mx-4 lg:mx-8 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600 text-white px-5 lg:px-7 pt-6 pb-7">
+        <div className="flex flex-col sm:flex-row gap-5 items-start">
+          <Avatar className="h-20 w-20 border-4 border-white/20 shrink-0">
             <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
               {getInitials(employee.firstName, employee.lastName)}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-2xl font-semibold">
+              <h2 className="text-xl font-semibold sm:text-2xl">
                 {employee.firstName} {employee.lastName}
-              </h1>
+              </h2>
               <Badge variant="outline" className={cn("border", status.className)}>
                 {status.label}
               </Badge>
@@ -145,7 +145,7 @@ export function EmployeeProfile({
       {/* Hierarchy cards */}
       <div
         className={cn(
-          "px-4 lg:px-8 -mt-12 grid gap-4 sm:grid-cols-2 relative z-10",
+          "px-4 lg:px-8 mt-6 mb-2 grid gap-4 sm:grid-cols-2",
           hierarchyCards.length >= 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"
         )}
       >
@@ -162,7 +162,7 @@ export function EmployeeProfile({
         ))}
       </div>
 
-      <div className="px-4 lg:px-8 py-6">
+      <div className="px-4 lg:px-8 pt-4 pb-6">
         <Tabs defaultValue="about">
           <TabsList className="mb-6">
             <TabsTrigger value="about">About</TabsTrigger>

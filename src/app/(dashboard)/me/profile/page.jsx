@@ -18,8 +18,8 @@ export default async function MyProfilePage() {
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold mb-6">My Profile</h1>
+    <div className="space-y-4">
+      <h1 className="text-lg font-semibold tracking-tight text-foreground">My Profile</h1>
       <EmployeeProfile employeeId={session.employeeId} />
     </div>
   );
