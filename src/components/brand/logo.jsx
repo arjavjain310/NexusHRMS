@@ -38,7 +38,7 @@ export function Logo({
   const content = withTitle ? (
     <span className="inline-flex min-w-0 items-center gap-2.5">
       {img}
-      <span className="truncate text-sm font-semibold tracking-tight text-foreground">
+      <span className="truncate text-base font-semibold tracking-tight text-foreground">
         {BRAND_TITLE}
       </span>
     </span>

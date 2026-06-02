@@ -48,8 +48,8 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen">
       <div className="hidden flex-1 flex-col justify-between bg-primary p-12 text-primary-foreground lg:flex">
-        <div className="inline-block rounded-xl bg-white/95 px-4 py-3 shadow-sm">
-          <Logo variant="full" priority className="h-10 max-w-[200px]" />
+        <div className="inline-flex rounded-xl bg-white/95 px-4 py-3 shadow-sm">
+          <Logo variant="mark" priority showTitle className="h-10 w-10" />
         </div>
         <div>
           <h2 className="text-3xl font-bold leading-tight">
