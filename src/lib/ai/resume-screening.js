@@ -1,4 +1,4 @@
-import { getOpenAI } from "./openai";
+import { getOpenAIResume, getResumeModel, getEmbeddingModel } from "./openai";
 function cosineSimilarity(a, b) {
   if (a.length !== b.length || a.length === 0) return 0;
   let dot = 0;
@@ -12,23 +12,23 @@ function cosineSimilarity(a, b) {
   return dot / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 export async function getEmbedding(text) {
-  const openai = getOpenAI();
+  const openai = getOpenAIResume();
   if (!openai) {
     return Array(8).fill(0).map(() => Math.random());
   }
   const res = await openai.embeddings.create({
-    model: "text-embedding-3-small",
+    model: getEmbeddingModel(),
     input: text.slice(0, 8000)
   });
   return res.data[0].embedding;
 }
 export async function parseResume(text, jobDescription) {
-  const openai = getOpenAI();
+  const openai = getOpenAIResume();
   if (!openai) {
     return mockParseResume(text, jobDescription);
   }
   const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: getResumeModel(),
     response_format: {
       type: "json_object"
     },
@@ -66,7 +66,7 @@ function mockParseResume(text, jobDescription) {
       role: "Software Engineer",
       duration: "2+ years"
     }],
-    summary: "Resume parsed in demo mode. Connect OPENAI_API_KEY for full AI screening.",
+    summary: "Resume parsed in demo mode. Set OPENROUTER_RESUME_API_KEY for full AI screening.",
     aiScore: score,
     matchReason: `Matched ${skills.length} key skills with the job description.`
   };
@@ -76,10 +76,10 @@ function extractName(text) {
   return line && line.length < 50 ? line : undefined;
 }
 function extractEmail(text) {
-  return text.match(/[\w.-]+@[\w.-]+\.\w+/)[0];
+  return text.match(/[\w.-]+@[\w.-]+\.\w+/)?.[0];
 }
 function extractPhone(text) {
-  return text.match(/\+?[\d\s()-]{10,}/)[0].trim();
+  return text.match(/\+?[\d\s()-]{10,}/)?.[0]?.trim();
 }
 export async function rankCandidates(jobEmbedding, candidates) {
   return candidates.map(c => ({

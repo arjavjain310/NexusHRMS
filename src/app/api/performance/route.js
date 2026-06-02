@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getOpenAI } from "@/lib/ai/openai";
+import { getOpenAIChat, getChatModel } from "@/lib/ai/openai";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
 export async function GET() {
@@ -91,11 +91,11 @@ export async function POST(request) {
     rating,
     feedback
   } = await request.json();
-  const openai = getOpenAI();
-  let aiInsights = "Enable OpenAI for AI-generated performance insights.";
+  const openai = getOpenAIChat();
+  let aiInsights = "Set OPENROUTER_CHAT_API_KEY for AI-generated performance insights.";
   if (openai) {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: getChatModel(),
       messages: [{
         role: "system",
         content: "Generate brief performance insights: strengths, improvements, growth recommendations."

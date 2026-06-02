@@ -18,12 +18,12 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Integrations</CardTitle>
-            <CardDescription>OpenAI, Supabase, and Vercel</CardDescription>
+            <CardDescription>OpenRouter, Supabase, and Vercel</CardDescription>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground space-y-2">
-            <p>OPENAI_API_KEY — AI features</p>
+            <p>OPENROUTER_RESUME_API_KEY — Resume screening & embeddings</p>
+            <p>OPENROUTER_CHAT_API_KEY — AI assistant & voice interview</p>
             <p>DATABASE_URL / DIRECT_URL — Neon PostgreSQL</p>
-            <p>OPENAI_API_KEY — AI features</p>
             <p>NEXT_PUBLIC_SUPABASE_* — Optional auth & storage</p>
           </CardContent>
         </Card>

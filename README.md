@@ -27,7 +27,7 @@ A modern, AI-powered Human Resource Management System built with Next.js 15, Jav
 - **Backend:** Next.js API Routes, Server Actions ready
 - **Database:** [Neon](https://neon.tech) PostgreSQL + Prisma ORM
 - **Auth:** Demo mode (optional Supabase Auth)
-- **AI:** OpenAI GPT-4o-mini & embeddings
+- **AI:** [OpenRouter](https://openrouter.ai) (GPT-4o-mini & embeddings; separate keys for resume vs chat/interview)
 - **Deploy:** Vercel + Neon
 
 ## Quick Start
@@ -37,7 +37,7 @@ A modern, AI-powered Human Resource Management System built with Next.js 15, Jav
 - Node.js 18+
 - npm or pnpm
 - Neon account ([console.neon.tech](https://console.neon.tech))
-- OpenAI API key (optional — demo fallbacks included)
+- OpenRouter API keys (optional — demo fallbacks included)
 
 ### 1. Install dependencies
 
@@ -65,7 +65,8 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```env
 DATABASE_URL=postgresql://USER:PASSWORD@ep-xxx.aws.neon.tech/neondb?sslmode=require
 DIRECT_URL=postgresql://USER:PASSWORD@ep-xxx.aws.neon.tech/neondb?sslmode=require
-OPENAI_API_KEY=sk-...
+OPENROUTER_RESUME_API_KEY=sk-or-v1-...
+OPENROUTER_CHAT_API_KEY=sk-or-v1-...
 DEMO_MODE=true
 ```
 
@@ -146,25 +147,23 @@ npm run db:seed
 
 5. Restart the dev server so Prisma picks up the new env vars
 
-## OpenAI Setup
+## OpenRouter Setup
 
-1. Get an API key from [platform.openai.com](https://platform.openai.com)
-2. Add `OPENAI_API_KEY` to `.env.local`
-3. AI features activate automatically:
-   - Resume screening & embeddings
-   - HR assistant chat
-   - Performance insights
-   - Voice interview analysis
+1. Create keys at [openrouter.ai/keys](https://openrouter.ai/keys) (e.g. one for resume, one for chat/interview)
+2. Add to `.env.local`:
+   - `OPENROUTER_RESUME_API_KEY` — resume screening & embeddings
+   - `OPENROUTER_CHAT_API_KEY` — HR assistant, voice interview, performance insights
+3. Restart the dev server (`npm run dev`)
 
 ## Vercel Deployment
 
 1. Push code to GitHub
 2. Import project in [vercel.com](https://vercel.com)
-3. Add environment variables from `.env.example`
-4. Set build command: `prisma generate && next build`
-5. Deploy
+3. Add all environment variables — see **[docs/VERCEL.md](docs/VERCEL.md)** for the full list
+4. Run `npx prisma db push` and `npm run db:seed` once against your Neon database (from your PC)
+5. Deploy / Redeploy
 
-**Important:** Add `DATABASE_URL` and `DIRECT_URL` from Neon in Vercel project settings.
+**Important:** Set `NEXT_PUBLIC_APP_URL` to your live Vercel URL (e.g. `https://nexus-hrms.vercel.app`).
 
 ## API Routes
 

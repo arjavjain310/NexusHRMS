@@ -1,11 +1,11 @@
-import { getOpenAI } from "./openai";
+import { getOpenAIChat, getChatModel } from "./openai";
 export async function generateInterviewQuestions(jobTitle, skills, count = 5) {
-  const openai = getOpenAI();
+  const openai = getOpenAIChat();
   if (!openai) {
     return mockQuestions(jobTitle, count);
   }
   const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: getChatModel(),
     response_format: {
       type: "json_object"
     },
@@ -47,7 +47,7 @@ function mockQuestions(jobTitle, count) {
   }));
 }
 export async function analyzeInterviewTranscript(transcript, jobTitle) {
-  const openai = getOpenAI();
+  const openai = getOpenAIChat();
   if (!openai || !transcript.trim()) {
     const wordCount = transcript.split(/\s+/).filter(Boolean).length;
     const base = Math.min(92, 55 + Math.floor(wordCount / 10));
@@ -56,13 +56,13 @@ export async function analyzeInterviewTranscript(transcript, jobTitle) {
       confidenceScore: base / 100,
       communicationScore: (base - 5) / 100,
       overallScore: base,
-      feedback: "Demo analysis based on response length. Enable OpenAI for sentiment and communication scoring.",
+      feedback: "Demo analysis based on response length. Set OPENROUTER_CHAT_API_KEY for sentiment and communication scoring.",
       highlights: ["Clear structure in responses", "Relevant examples provided"],
       improvements: ["Add more quantifiable outcomes", "Reduce filler words"]
     };
   }
   const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: getChatModel(),
     response_format: {
       type: "json_object"
     },
