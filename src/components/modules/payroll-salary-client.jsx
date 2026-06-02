@@ -33,7 +33,7 @@ export function PayrollSalaryClient() {
             <CardTitle className="text-sm text-muted-foreground">Deductions</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold">{formatCurrency(s.deductions || 0)}</p>
+            <p className="text-2xl font-semibold">{formatCurrency(s?.deductions || 0)}</p>
           </CardContent>
         </Card>
         <Card>
@@ -46,6 +46,16 @@ export function PayrollSalaryClient() {
         </Card>
       </div>
 
+      {!data && (
+        <p className="text-sm text-muted-foreground">Loading payroll...</p>
+      )}
+      {data && !s && (
+        <Card>
+          <CardContent className="py-8 text-center text-muted-foreground">
+            No salary structure on file yet. Contact HR.
+          </CardContent>
+        </Card>
+      )}
       {s && <Card>
           <CardHeader>
             <CardTitle>Salary Breakup</CardTitle>

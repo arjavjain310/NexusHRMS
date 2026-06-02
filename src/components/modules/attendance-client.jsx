@@ -139,7 +139,7 @@ export function AttendanceClient() {
         type: "success",
         text: json.message || "Saved"
       });
-      if (json.records.length) {
+      if (json.records?.length) {
         setRecords(json.records);
       } else if (json.data) {
         setRecords(prev => mergeRecord(prev, json.data));
@@ -284,7 +284,7 @@ export function AttendanceClient() {
                 Remote Clock-In
               </Button>
               <Button className="w-full justify-start gap-2" variant={status.canCheckOut ? "default" : "secondary"} onClick={() => handleClock("check-out")} disabled={!status.canCheckOut || !!actionLoading}>
-                {actionLoading.startsWith("check-out") ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
+                {actionLoading?.startsWith("check-out") ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
                 Clock Out
               </Button>
               <button type="button" className="flex w-full items-center gap-2 px-3 py-2 text-sm text-primary hover:underline">

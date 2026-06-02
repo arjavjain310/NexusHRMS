@@ -13,9 +13,9 @@ export function PayrollPayslipsClient() {
   const [year, setYear] = useState(new Date().getFullYear());
   useEffect(() => {
     fetch("/api/payroll").then(r => r.json()).then(j => {
-      const list = j.data.payslips || [];
+      const list = j.data?.payslips || [];
       setPayslips(list);
-      setOrgName(j.data.organizationName);
+      setOrgName(j.data?.organizationName);
       if (list.length) setSelectedId(list[0].id);
     });
   }, []);

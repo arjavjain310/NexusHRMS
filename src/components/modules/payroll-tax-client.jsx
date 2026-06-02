@@ -79,12 +79,12 @@ export function PayrollTaxClient() {
                 <tr>
                   <td className="border px-3 py-2 font-medium">Stipend / Salary</td>
                   <td className="border px-3 py-2 text-center">
-                    {formatCurrency(tax.netTaxableIncome ? tax.netTaxableIncome / 12 : 0)}
+                    {formatCurrency(tax?.netTaxableIncome ? tax.netTaxableIncome / 12 : 0)}
                   </td>
                   {Array.from({
                   length: 12
                 }).map((_, i) => <td key={i} className="border px-2 py-2 text-center">
-                      {formatCurrency(tax.netTaxableIncome ? tax.netTaxableIncome / 12 : 0)}
+                      {formatCurrency(tax?.netTaxableIncome ? tax.netTaxableIncome / 12 : 0)}
                     </td>)}
                 </tr>
               </tbody>

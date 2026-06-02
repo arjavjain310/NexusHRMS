@@ -71,10 +71,10 @@ export async function GET() {
       data: serialized,
       today,
       status: {
-        checkedIn: !!today.checkIn,
-        checkedOut: !!today.checkOut,
-        canCheckIn: !today.checkIn || !!today.checkOut,
-        canCheckOut: !!today.checkIn && !today.checkOut
+        checkedIn: !!today?.checkIn,
+        checkedOut: !!today?.checkOut,
+        canCheckIn: !today?.checkIn || !!today?.checkOut,
+        canCheckOut: !!today?.checkIn && !today?.checkOut
       },
       employeeId: session.employeeId ?? null
     });

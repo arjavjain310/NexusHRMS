@@ -122,7 +122,7 @@ export async function GET(request) {
           taxRate: Number(structure.taxRate)
         } : null,
         employee,
-        organizationName: org.name,
+        organizationName: org?.name ?? "Organization",
         taxSummary
       }
     });
