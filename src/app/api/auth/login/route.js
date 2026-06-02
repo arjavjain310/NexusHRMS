@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { setDemoSession } from "@/lib/auth/session";
 import { DEMO_CREDENTIALS } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
+import { isDemoMode } from "@/lib/auth/mode";
+
 export async function POST(request) {
   const {
     email,
@@ -15,7 +17,7 @@ export async function POST(request) {
       status: 400
     });
   }
-  if (process.env.DEMO_MODE === "true" || !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  if (isDemoMode() || !process.env.NEXT_PUBLIC_SUPABASE_URL) {
     const demo = DEMO_CREDENTIALS.find(c => c.email === email);
     if (!demo || password !== demo.password) {
       return NextResponse.json({
@@ -92,11 +94,19 @@ export async function POST(request) {
     });
     if (!dbUser) {
       return NextResponse.json({
-        error: "User not provisioned in HRMS"
+        error: "This email is not registered with your company. Contact HR or complete sign up if you were invited."
       }, {
         status: 403
       });
     }
+
+    if (data.user?.id && !dbUser.supabaseId) {
+      await prisma.user.update({
+        where: { id: dbUser.id },
+        data: { supabaseId: data.user.id },
+      });
+    }
+
     return NextResponse.json({
       success: true
     });

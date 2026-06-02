@@ -1,5 +1,8 @@
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Nexus HRMS";
 
+/** Show demo quick-login buttons on /login (local dev only). */
+export const IS_DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+
 /** Default currency for payroll and financial displays */
 export const DEFAULT_CURRENCY = "INR";
 export const CURRENCY_LOCALE = "en-IN";

@@ -7,42 +7,46 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { APP_NAME, DEMO_CREDENTIALS, IS_DEMO_MODE } from "@/lib/constants";
+import { APP_NAME } from "@/lib/constants";
 import { Sparkles } from "lucide-react";
 
-export default function LoginPage() {
+export default function SignupPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setLoading(true);
     setError("");
+    setMessage("");
 
-    const res = await fetch("/api/auth/login", {
+    if (password !== confirm) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    setLoading(true);
+    const res = await fetch("/api/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
-
     const data = await res.json();
     setLoading(false);
 
     if (!res.ok) {
-      setError(data.error || "Login failed");
+      setError(data.error || "Sign up failed");
       return;
     }
 
-    router.push("/dashboard");
-    router.refresh();
-  }
-
-  function quickLogin(demoEmail) {
-    setEmail(demoEmail);
-    setPassword("demo1234");
+    setMessage(data.message || "Account created.");
+    if (!data.needsEmailConfirmation) {
+      setTimeout(() => router.push("/login"), 1500);
+    }
   }
 
   return (
@@ -53,26 +57,23 @@ export default function LoginPage() {
           <span className="text-xl font-semibold">{APP_NAME}</span>
         </div>
         <div>
-          <h2 className="text-3xl font-bold leading-tight">
-            The modern AI-first HR platform for growing companies.
-          </h2>
+          <h2 className="text-3xl font-bold leading-tight">Create your employee account</h2>
           <p className="mt-4 text-primary-foreground/80 max-w-md">
-            Manage employees, attendance, payroll, and recruitment — with intelligent automation at every step.
+            HR must add your work email in the system first. Then you can set your password here.
           </p>
         </div>
-        <p className="text-sm text-primary-foreground/60">© {new Date().getFullYear()} Nexus HRMS</p>
       </div>
 
       <div className="flex flex-1 items-center justify-center p-6">
         <Card className="w-full max-w-md border-0 shadow-none lg:border lg:shadow-card">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl">Welcome back</CardTitle>
-            <CardDescription>Sign in to your workspace</CardDescription>
+            <CardTitle className="text-2xl">Sign up</CardTitle>
+            <CardDescription>Use the work email HR registered for you</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Work email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -87,49 +88,34 @@ export default function LoginPage() {
                 <Input
                   id="password"
                   type="password"
+                  minLength={8}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirm">Confirm password</Label>
+                <Input
+                  id="confirm"
+                  type="password"
+                  minLength={8}
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  required
+                />
+              </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
+              {message && <p className="text-sm text-green-600 dark:text-green-400">{message}</p>}
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Signing in..." : "Sign in"}
+                {loading ? "Creating account..." : "Create account"}
               </Button>
             </form>
 
-            {IS_DEMO_MODE && (
-              <div className="mt-6">
-                <p className="text-xs text-muted-foreground mb-3">Demo accounts (password: demo1234)</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {DEMO_CREDENTIALS.map((c) => (
-                    <Button
-                      key={c.email}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="text-xs justify-start truncate"
-                      onClick={() => quickLogin(c.email)}
-                    >
-                      {c.role.replace("_", " ")}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            )}
-
             <p className="mt-6 text-center text-sm text-muted-foreground">
-              {!IS_DEMO_MODE && (
-                <>
-                  New employee?{" "}
-                  <Link href="/signup" className="text-primary hover:underline">
-                    Sign up
-                  </Link>
-                  <span className="mx-2">·</span>
-                </>
-              )}
-              <Link href="/" className="text-primary hover:underline">
-                Back to home
+              Already have an account?{" "}
+              <Link href="/login" className="text-primary hover:underline">
+                Sign in
               </Link>
             </p>
           </CardContent>

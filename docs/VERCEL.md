@@ -22,7 +22,9 @@ Enable for **Production** (and **Preview** if you want preview deployments to wo
 |----------|------------------|
 | `DATABASE_URL` | Neon **pooled** connection string (`?sslmode=require`) |
 | `DIRECT_URL` | Neon **direct** connection string (same DB, non-pooler host) |
-| `DEMO_MODE` | `true` (demo logins; set `false` only if using Supabase auth) |
+| `DEMO_MODE` | `false` or **omit** (required for real employee login) |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
 | `NEXT_PUBLIC_APP_URL` | `https://your-project.vercel.app` (your real Vercel URL) |
 | `NEXT_PUBLIC_APP_NAME` | `Nexus HRMS` |
 
@@ -37,13 +39,12 @@ Enable for **Production** (and **Preview** if you want preview deployments to wo
 | `OPENROUTER_RESUME_MODEL` | `openai/gpt-4o-mini` |
 | `OPENROUTER_EMBEDDING_MODEL` | `openai/text-embedding-3-small` |
 
-### Optional (Supabase auth — only if `DEMO_MODE=false`)
+### Optional
 
 | Variable | Notes |
 |----------|--------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server-only; never expose to client |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-only admin scripts |
+| `NEXT_PUBLIC_DEMO_MODE` | `true` only for local demo UI on login page |
 
 ### Optional (legacy)
 
@@ -53,7 +54,24 @@ Enable for **Production** (and **Preview** if you want preview deployments to wo
 
 ---
 
-## 3. Database setup (one time)
+## 3. Real employees (no demo mode)
+
+**Do not set `DEMO_MODE=true` on Vercel.**
+
+| System | Role |
+|--------|------|
+| **Neon** | Employee records, attendance, payroll, roles (`User` + `Employee` tables) |
+| **Supabase** | Login passwords & sessions (email + password) |
+
+**Onboarding flow:**
+
+1. HR adds employee in HRMS (or seed) → row in Neon with work email.
+2. Employee opens `/signup` → sets password (email must match Neon).
+3. Employee signs in at `/login`.
+
+In Supabase: **Authentication → Providers → Email** enabled. For internal HRMS, you can disable “Confirm email” under email settings so signup works immediately.
+
+## 4. Database setup (one time)
 
 From your **local machine** (with Neon URLs in `.env`):
 

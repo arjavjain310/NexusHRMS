@@ -1,9 +1,12 @@
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { isDemoMode } from "@/lib/auth/mode";
+
 const DEMO_SESSION_COOKIE = "nexus_demo_session";
+
 export async function getSession() {
-  if (process.env.DEMO_MODE === "true") {
+  if (isDemoMode()) {
     return getDemoSession();
   }
   try {
