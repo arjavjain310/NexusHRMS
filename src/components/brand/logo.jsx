@@ -1,17 +1,28 @@
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { APP_NAME, LOGO_ICON_SRC, LOGO_SRC } from "@/lib/constants";
+import { APP_NAME, BRAND_TITLE, LOGO_ICON_SRC, LOGO_SRC } from "@/lib/constants";
 
 /**
- * @param {"full" | "icon"} variant — full wordmark or compact mark for sidebar collapsed
+ * @param {"full" | "icon" | "mark"} variant — full image, icon only, or icon + BRAND_TITLE
  */
-export function Logo({ className, variant = "full", href, priority = false }) {
-  const src = variant === "icon" ? LOGO_ICON_SRC : LOGO_SRC;
-  const size =
-    variant === "icon"
-      ? { width: 36, height: 36, className: cn("h-9 w-9 object-contain", className) }
-      : { width: 160, height: 48, className: cn("h-9 w-auto max-w-[140px] object-contain object-left", className) };
+export function Logo({
+  className,
+  variant = "full",
+  href,
+  priority = false,
+  showTitle,
+}) {
+  const withTitle = showTitle ?? variant === "mark";
+  const useIcon = variant === "icon" || variant === "mark";
+  const src = useIcon ? LOGO_ICON_SRC : LOGO_SRC;
+  const size = useIcon
+    ? { width: 36, height: 36, className: cn("h-9 w-9 shrink-0 object-contain", className) }
+    : {
+        width: 160,
+        height: 48,
+        className: cn("h-9 w-auto max-w-[140px] object-contain object-left", className),
+      };
 
   const img = (
     <Image
@@ -24,13 +35,24 @@ export function Logo({ className, variant = "full", href, priority = false }) {
     />
   );
 
+  const content = withTitle ? (
+    <span className="inline-flex min-w-0 items-center gap-2.5">
+      {img}
+      <span className="truncate text-sm font-semibold tracking-tight text-foreground">
+        {BRAND_TITLE}
+      </span>
+    </span>
+  ) : (
+    img
+  );
+
   if (href) {
     return (
-      <Link href={href} className="inline-flex shrink-0 items-center">
-        {img}
+      <Link href={href} className="inline-flex min-w-0 max-w-full shrink-0 items-center">
+        {content}
       </Link>
     );
   }
 
-  return img;
+  return content;
 }

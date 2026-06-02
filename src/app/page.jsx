@@ -7,7 +7,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-primary/5">
       <header className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Logo variant="full" href="/" priority className="h-9" />
+        <Logo variant="mark" href="/" priority showTitle />
         <div className="flex gap-3">
           <Button variant="ghost" asChild>
             <Link href="/login">Sign in</Link>

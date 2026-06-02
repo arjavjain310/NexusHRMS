@@ -26,10 +26,10 @@ export function Sidebar({ role, collapsed }) {
     >
       <div className="flex h-16 items-center border-b border-sidebar-border px-3">
         <Logo
-          variant={collapsed ? "icon" : "full"}
+          variant={collapsed ? "icon" : "mark"}
           href="/dashboard"
           priority
-          className={collapsed ? "" : "max-h-10 w-full"}
+          showTitle={!collapsed}
         />
       </div>
 

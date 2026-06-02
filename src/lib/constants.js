@@ -1,5 +1,8 @@
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Nexus HRMS";
 
+/** Shown beside the logo in sidebar and header */
+export const BRAND_TITLE = process.env.NEXT_PUBLIC_BRAND_TITLE || "Nexus-HRMS";
+
 /** Brand assets in /public */
 export const LOGO_SRC = "/logo.png";
 export const LOGO_ICON_SRC = "/favicon.png";
