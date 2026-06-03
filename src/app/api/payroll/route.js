@@ -2,15 +2,13 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/auth/permissions";
-function serializePayslip(p) {
-  return {
-    ...p,
-    baseSalary: Number(p.baseSalary),
-    bonuses: Number(p.bonuses),
-    deductions: Number(p.deductions),
-    netPay: Number(p.netPay)
-  };
-}
+import { buildPayslipFromStructure, serializePayslip } from "@/lib/payroll/payslip";
+
+const employeeInclude = {
+  department: true,
+  designation: true,
+  organization: { select: { name: true } },
+};
 export async function GET(request) {
   const session = await getSession();
   if (!session) return NextResponse.json({
@@ -22,8 +20,105 @@ export async function GET(request) {
     searchParams
   } = new URL(request.url);
   const payslipId = searchParams.get("id");
+  const monthParam = searchParams.get("month");
+  const yearParam = searchParams.get("year");
   const employeeId = searchParams.get("employeeId") || session.employeeId;
+
   try {
+    if (monthParam && yearParam && employeeId) {
+      const month = parseInt(monthParam, 10);
+      const year = parseInt(yearParam, 10);
+      if (!month || month < 1 || month > 12 || !year) {
+        return NextResponse.json({ error: "Invalid month or year" }, { status: 400 });
+      }
+
+      const targetId =
+        hasPermission(session.role, "managePayroll") && searchParams.get("employeeId")
+          ? searchParams.get("employeeId")
+          : session.employeeId;
+
+      if (!targetId) {
+        return NextResponse.json(
+          { error: "No employee profile linked to your account." },
+          { status: 403 }
+        );
+      }
+      if (targetId !== session.employeeId && !hasPermission(session.role, "managePayroll")) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+
+      let payslip = await prisma.payslip.findFirst({
+        where: { employeeId: targetId, month, year },
+        include: { employee: { include: employeeInclude } },
+      });
+
+      const employee = payslip?.employee ??
+        (await prisma.employee.findFirst({
+          where: { id: targetId, organizationId: session.organizationId },
+          include: employeeInclude,
+        }));
+
+      if (!employee) {
+        return NextResponse.json({ error: "Employee not found" }, { status: 404 });
+      }
+
+      if (!payslip) {
+        const structure = await prisma.salaryStructure.findUnique({
+          where: { employeeId: targetId },
+        });
+        if (!structure) {
+          return NextResponse.json(
+            {
+              error:
+                "No payslip for this period. Ask HR to set up your salary structure or process payroll.",
+            },
+            { status: 404 }
+          );
+        }
+
+        const built = buildPayslipFromStructure(structure, employee, month, year);
+        try {
+          const saved = await prisma.payslip.upsert({
+            where: {
+              employeeId_month_year: { employeeId: targetId, month, year },
+            },
+            create: {
+              employeeId: targetId,
+              month,
+              year,
+              baseSalary: built.baseSalary,
+              bonuses: built.bonuses,
+              deductions: built.deductions,
+              netPay: built.netPay,
+              workingDays: built.workingDays,
+              payableDays: built.payableDays,
+              lossOfPayDays: built.lossOfPayDays,
+              earningsDetail: built.earningsDetail,
+              status: "PAID",
+              processedAt: new Date(),
+            },
+            update: {
+              netPay: built.netPay,
+              deductions: built.deductions,
+              earningsDetail: built.earningsDetail,
+              status: "PAID",
+              processedAt: new Date(),
+            },
+            include: { employee: { include: employeeInclude } },
+          });
+          payslip = saved;
+        } catch {
+          payslip = { ...built, employee };
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: serializePayslip(payslip),
+        generatedAt: new Date().toISOString(),
+      });
+    }
+
     if (payslipId) {
       const payslip = await prisma.payslip.findFirst({
         where: {
@@ -33,14 +128,8 @@ export async function GET(request) {
           }
         },
         include: {
-          employee: {
-            include: {
-              department: true,
-              designation: true,
-              organization: true
-            }
-          }
-        }
+          employee: { include: employeeInclude },
+        },
       });
       if (!payslip) return NextResponse.json({
         error: "Payslip not found"
