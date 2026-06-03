@@ -17,6 +17,7 @@
     "db:seed-departments": "node scripts/seed-departments.mjs",
     "db:renumber-employees": "node scripts/renumber-employees.mjs",
     "db:rename-team": "node scripts/rename-demo-team.mjs",
+    "db:seed-holidays": "node scripts/seed-holidays-2026.mjs",
     "db:update-team-auth": "node scripts/update-team-emails-passwords.mjs",
     "db:setup": "prisma db push && npm run db:seed",
     "postinstall": "prisma generate"

@@ -304,15 +304,45 @@ async function main() {
     }
   }
 
-  const holidays = [
-    { name: "Republic Day", date: new Date("2026-01-26") },
-    { name: "Independence Day", date: new Date("2026-08-15") },
+  const holidays2026 = [
+    { name: "New Year's Day", date: new Date("2026-01-01"), isOptional: false },
+    { name: "Republic Day", date: new Date("2026-01-26"), isOptional: false },
+    { name: "Holi", date: new Date("2026-03-04"), isOptional: true },
+    { name: "Eid-ul-Fitr", date: new Date("2026-03-21"), isOptional: true },
+    { name: "Ram Navami", date: new Date("2026-03-26"), isOptional: true },
+    { name: "Mahavir Jayanti", date: new Date("2026-03-31"), isOptional: true },
+    { name: "Good Friday", date: new Date("2026-04-03"), isOptional: true },
+    { name: "Buddha Purnima", date: new Date("2026-05-01"), isOptional: true },
+    { name: "Bakrid (Eid-ul-Zuha)", date: new Date("2026-05-27"), isOptional: true },
+    { name: "Muharram", date: new Date("2026-06-26"), isOptional: true },
+    { name: "Independence Day", date: new Date("2026-08-15"), isOptional: false },
+    { name: "Milad-un-Nabi", date: new Date("2026-08-26"), isOptional: true },
+    { name: "Janmashtami", date: new Date("2026-09-04"), isOptional: true },
+    { name: "Gandhi Jayanti", date: new Date("2026-10-02"), isOptional: false },
+    { name: "Dussehra", date: new Date("2026-10-20"), isOptional: true },
+    { name: "Diwali", date: new Date("2026-11-08"), isOptional: true },
+    { name: "Guru Nanak Jayanti", date: new Date("2026-11-24"), isOptional: true },
+    { name: "Christmas", date: new Date("2026-12-25"), isOptional: true },
   ];
 
-  for (const h of holidays) {
-    await prisma.holiday.create({
-      data: { organizationId: org.id, name: h.name, date: h.date },
-    }).catch(() => {});
+  for (const h of holidays2026) {
+    const existing = await prisma.holiday.findFirst({
+      where: {
+        organizationId: org.id,
+        name: h.name,
+        date: h.date,
+      },
+    });
+    if (!existing) {
+      await prisma.holiday.create({
+        data: {
+          organizationId: org.id,
+          name: h.name,
+          date: h.date,
+          isOptional: h.isOptional,
+        },
+      }).catch(() => {});
+    }
   }
 
   await prisma.jobPost.create({
