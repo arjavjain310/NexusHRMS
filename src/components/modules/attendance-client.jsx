@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { cn, formatDate, formatDateShort, formatDurationBetween, formatDurationMs, formatTime } from "@/lib/utils";
-import { Clock, Globe, Laptop, LogOut, MoreHorizontal, User, FileText, Loader2 } from "lucide-react";
+import { Clock, LogIn, LogOut, MoreHorizontal, User, FileText, Loader2 } from "lucide-react";
 import { format, startOfWeek, eachDayOfInterval, isToday, addDays } from "date-fns";
 import { ModuleSubNav, ME_MODULE_TABS } from "@/components/layout/module-sub-nav";
 const MONTH_FILTERS = ["30 DAYS", "MAY", "APR", "MAR", "FEB", "JAN"];
@@ -146,8 +146,8 @@ export function AttendanceClient() {
       setCorrectionLoading(false);
     }
   }
-  async function handleClock(action, source = "web") {
-    setActionLoading(`${action}-${source}`);
+  async function handleClock(action) {
+    setActionLoading(action);
     setMessage(null);
     try {
       const res = await fetch("/api/attendance", {
@@ -155,10 +155,7 @@ export function AttendanceClient() {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          action,
-          source
-        })
+        body: JSON.stringify({ action })
       });
       const json = await res.json();
       if (!res.ok) {
@@ -320,16 +317,30 @@ export function AttendanceClient() {
               <LiveClock hour12={hour12} />
             </div>
             <div className="space-y-2">
-              <Button className="w-full justify-start gap-2" variant="outline" onClick={() => handleClock("check-in", "web")} disabled={!status.canCheckIn || !!actionLoading}>
-                {actionLoading === "check-in-web" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Globe className="h-4 w-4 text-primary" />}
-                Web Clock-In
+              <Button
+                className="w-full justify-start gap-2"
+                variant="outline"
+                onClick={() => handleClock("check-in")}
+                disabled={!status.canCheckIn || !!actionLoading}
+              >
+                {actionLoading === "check-in" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <LogIn className="h-4 w-4 text-primary" />
+                )}
+                Clock In
               </Button>
-              <Button className="w-full justify-start gap-2" variant="outline" onClick={() => handleClock("check-in", "remote")} disabled={!status.canCheckIn || !!actionLoading}>
-                {actionLoading === "check-in-remote" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Laptop className="h-4 w-4 text-primary" />}
-                Remote Clock-In
-              </Button>
-              <Button className="w-full justify-start gap-2" variant={status.canCheckOut ? "default" : "secondary"} onClick={() => handleClock("check-out")} disabled={!status.canCheckOut || !!actionLoading}>
-                {actionLoading?.startsWith("check-out") ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
+              <Button
+                className="w-full justify-start gap-2"
+                variant={status.canCheckOut ? "default" : "secondary"}
+                onClick={() => handleClock("check-out")}
+                disabled={!status.canCheckOut || !!actionLoading}
+              >
+                {actionLoading === "check-out" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <LogOut className="h-4 w-4" />
+                )}
                 Clock Out
               </Button>
               <button type="button" className="flex w-full items-center gap-2 px-3 py-2 text-sm text-primary hover:underline">

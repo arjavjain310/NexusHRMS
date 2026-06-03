@@ -98,7 +98,6 @@ export async function POST(request) {
   }
   const body = await request.json();
   const action = body.action;
-  const source = body.source || "web";
   if (action !== "check-in" && action !== "check-out") {
     return NextResponse.json({
       error: "Invalid action"
@@ -108,7 +107,6 @@ export async function POST(request) {
   }
   const today = getAttendanceDate();
   const now = new Date();
-  const clockNote = source === "remote" ? "REMOTE_CLOCK_IN" : "WEB_CLOCK_IN";
   try {
     const existing = await findTodayRecord(session.employeeId);
     if (action === "check-in") {
@@ -137,8 +135,8 @@ export async function POST(request) {
           data: {
             checkIn: now,
             checkOut: null,
-            status: source === "remote" ? "REMOTE" : "PRESENT",
-            notes: clockNote,
+            status: "PRESENT",
+            notes: "CLOCK_IN",
             date: today
           }
         });
@@ -149,8 +147,8 @@ export async function POST(request) {
             date: today,
             checkIn: now,
             checkOut: null,
-            status: source === "remote" ? "REMOTE" : "PRESENT",
-            notes: clockNote
+            status: "PRESENT",
+            notes: "CLOCK_IN"
           }
         });
       }
