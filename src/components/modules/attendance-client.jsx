@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { cn, formatDate, formatDateShort, formatDurationBetween, formatDurationMs, formatTime } from "@/lib/utils";
-import { Clock, LogIn, LogOut, MoreHorizontal, User, FileText, Loader2 } from "lucide-react";
+import { Clock, LogIn, LogOut, MoreHorizontal, User, Loader2 } from "lucide-react";
 import { format, startOfWeek, eachDayOfInterval, isToday, addDays } from "date-fns";
 import { ModuleSubNav, ME_MODULE_TABS } from "@/components/layout/module-sub-nav";
 const MONTH_FILTERS = ["30 DAYS", "MAY", "APR", "MAR", "FEB", "JAN"];
@@ -343,10 +343,6 @@ export function AttendanceClient() {
                 )}
                 Clock Out
               </Button>
-              <button type="button" className="flex w-full items-center gap-2 px-3 py-2 text-sm text-primary hover:underline">
-                <FileText className="h-4 w-4" />
-                Attendance Policy
-              </button>
             </div>
           </CardContent>
         </Card>

@@ -121,15 +121,10 @@ export default function LoginPage() {
             )}
 
             <p className="mt-6 text-center text-sm text-muted-foreground">
-              {!IS_DEMO_MODE && (
-                <>
-                  New employee?{" "}
-                  <Link href="/signup" className="text-primary hover:underline">
-                    Sign up
-                  </Link>
-                  <span className="mx-2">·</span>
-                </>
-              )}
+              <Link href="/reset-password" className="text-primary hover:underline">
+                Reset password
+              </Link>
+              <span className="mx-2">·</span>
               <Link href="/" className="text-primary hover:underline">
                 Back to home
               </Link>

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-const PUBLIC_PATHS = ["/", "/login", "/signup", "/api/auth"];
+const PUBLIC_PATHS = ["/", "/login", "/signup", "/reset-password", "/api/auth"];
 const AUTH_PATHS = ["/login", "/signup"];
 export async function middleware(request) {
   const {
