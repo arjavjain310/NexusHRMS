@@ -52,9 +52,7 @@ export default function SignupPage() {
   return (
     <div className="flex min-h-screen">
       <div className="hidden flex-1 flex-col justify-between bg-primary p-12 text-primary-foreground lg:flex">
-        <div className="inline-flex rounded-xl bg-white/95 px-4 py-3 shadow-sm">
-          <Logo variant="mark" priority showTitle className="h-10 w-10" />
-        </div>
+        <Logo variant="icon" priority className="h-14 w-14 sm:h-16 sm:w-16" />
         <div>
           <h2 className="text-3xl font-bold leading-tight">Create your employee account</h2>
           <p className="mt-4 text-primary-foreground/80 max-w-md">
