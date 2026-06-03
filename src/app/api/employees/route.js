@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
 import { canManageEmployees } from "@/lib/auth/employee-management";
-import { DEFAULT_COMPANY_PASSWORD } from "@/lib/auth/default-password";
-import { syncSupabaseAuthUser } from "@/lib/supabase/admin";
 
 const VALID_ROLES = ["ADMIN", "SENIOR_MANAGER", "HR_RECRUITER", "EMPLOYEE"];
 const VALID_STATUSES = ["ACTIVE", "ON_LEAVE", "TERMINATED", "PROBATION"];
@@ -177,18 +175,10 @@ export async function POST(request) {
       return emp;
     });
 
-    const authSync = await syncSupabaseAuthUser(normalizedEmail);
-    if (authSync.supabaseId) {
-      await prisma.user.update({
-        where: { email: normalizedEmail },
-        data: { supabaseId: authSync.supabaseId },
-      });
-    }
-
     return NextResponse.json({
       success: true,
       data: employee,
-      message: `${firstName} ${lastName} was added. Sign in at /login with ${normalizedEmail} and initial password ${DEFAULT_COMPANY_PASSWORD} (change via /signup or Supabase).`,
+      message: `${firstName} ${lastName} was added. They should open /signup with work email ${normalizedEmail} to create their password, then sign in.`,
     });
   } catch (e) {
     console.error("[employees POST]", e);

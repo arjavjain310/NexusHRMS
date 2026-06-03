@@ -1,6 +1,4 @@
 import { createClient } from "@supabase/supabase-js";
-import { DEFAULT_COMPANY_PASSWORD } from "@/lib/auth/default-password";
-
 export function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -10,10 +8,13 @@ export function getSupabaseAdmin() {
   });
 }
 
-/** Create or update Supabase auth user with the company default password */
-export async function syncSupabaseAuthUser(email, password = DEFAULT_COMPANY_PASSWORD) {
+/** Admin/scripts only — pass an explicit password. Do not use for new employee onboarding. */
+export async function syncSupabaseAuthUser(email, password) {
   const admin = getSupabaseAdmin();
   if (!admin) return { supabaseId: null, skipped: true };
+  if (!password) {
+    return { supabaseId: null, error: "Password is required" };
+  }
 
   const normalized = email.trim().toLowerCase();
 

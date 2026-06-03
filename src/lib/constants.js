@@ -1,7 +1,6 @@
-import { DEFAULT_COMPANY_PASSWORD } from "@/lib/auth/default-password";
+import { DEMO_MODE_PASSWORD } from "@/lib/auth/demo-password";
 
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Nexus HRMS";
-export { DEFAULT_COMPANY_PASSWORD };
 
 /** Shown beside the logo in sidebar and header */
 export const BRAND_TITLE = process.env.NEXT_PUBLIC_BRAND_TITLE || "Nexus-HRMS";
@@ -27,12 +26,14 @@ export const ROLE_LABELS = {
 };
 
 export const DEMO_CREDENTIALS = [
-  { email: "arjav@nexushrms.com", password: DEFAULT_COMPANY_PASSWORD, role: "ADMIN" },
-  { email: "ravi@nexushrms.com", password: DEFAULT_COMPANY_PASSWORD, role: "ADMIN" },
-  { email: "saakshi@nexushrms.com", password: DEFAULT_COMPANY_PASSWORD, role: "SENIOR_MANAGER" },
-  { email: "harshit@nexushrms.com", password: DEFAULT_COMPANY_PASSWORD, role: "HR_RECRUITER" },
-  { email: "employee@nexushrms.com", password: DEFAULT_COMPANY_PASSWORD, role: "EMPLOYEE" },
+  { email: "arjav@nexushrms.com", password: DEMO_MODE_PASSWORD, role: "ADMIN" },
+  { email: "ravi@nexushrms.com", password: DEMO_MODE_PASSWORD, role: "ADMIN" },
+  { email: "saakshi@nexushrms.com", password: DEMO_MODE_PASSWORD, role: "SENIOR_MANAGER" },
+  { email: "harshit@nexushrms.com", password: DEMO_MODE_PASSWORD, role: "HR_RECRUITER" },
+  { email: "employee@nexushrms.com", password: DEMO_MODE_PASSWORD, role: "EMPLOYEE" },
 ];
+
+export { DEMO_MODE_PASSWORD };
 
 export const NAV_ITEMS = [
   { title: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },

@@ -4,6 +4,13 @@ A modern, AI-powered Human Resource Management System built with Next.js 15, Jav
 
 > *A modern AI-first version of KEKA built for next-generation HR teams.*
 
+## Documentation
+
+| Doc | Purpose |
+|-----|---------|
+| [docs/PROJECT_GUIDE.md](docs/PROJECT_GUIDE.md) | End-to-end architecture, modules, and data flows |
+| [docs/INTERVIEW_QA.md](docs/INTERVIEW_QA.md) | Interview Q&A (75+ questions with answers) |
+
 ## Features
 
 | Module | Capabilities |

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { setDemoSession } from "@/lib/auth/session";
-import { DEMO_CREDENTIALS, DEFAULT_COMPANY_PASSWORD } from "@/lib/constants";
+import { DEMO_CREDENTIALS, DEMO_MODE_PASSWORD } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 import { isDemoMode } from "@/lib/auth/mode";
 
@@ -39,7 +39,7 @@ export async function POST(request) {
         }
       });
       const passwordOk =
-        password === DEFAULT_COMPANY_PASSWORD ||
+        password === DEMO_MODE_PASSWORD ||
         (demo && password === demo.password);
       if (!user || !passwordOk) {
         return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
@@ -59,7 +59,7 @@ export async function POST(request) {
     } catch (e2) {
       // DB not connected — use in-memory demo session
     }
-    if (!demo || password !== DEFAULT_COMPANY_PASSWORD) {
+    if (!demo || password !== DEMO_MODE_PASSWORD) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
     await setDemoSession({
@@ -72,43 +72,53 @@ export async function POST(request) {
     return NextResponse.json({ success: true });
   }
   try {
+    const normalizedEmail = email.trim().toLowerCase();
+    const dbUser = await prisma.user.findFirst({
+      where: { email: { equals: normalizedEmail, mode: "insensitive" } },
+      include: { employee: true },
+    });
+
+    if (!dbUser) {
+      return NextResponse.json(
+        {
+          error:
+            "This email is not registered with your company. Ask HR to add you, then use Sign up to create your password.",
+        },
+        { status: 403 }
+      );
+    }
+
+    if (!dbUser.supabaseId) {
+      return NextResponse.json(
+        {
+          error:
+            "Please complete Sign up with your work email to set your password, then sign in here.",
+        },
+        { status: 403 }
+      );
+    }
+
     const supabase = await createClient();
-    const {
-      data,
-      error
-    } = await supabase.auth.signInWithPassword({
-      email,
-      password
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: normalizedEmail,
+      password,
     });
     if (error) {
       let message = error.message;
       if (/not confirmed/i.test(message)) {
         message =
-          "Email not confirmed. In Supabase: Authentication → Users → select your user → confirm, or turn off Confirm email under Authentication → Email. You can also delete the user and re-add with Auto Confirm enabled.";
+          "Email not confirmed. In Supabase: Authentication → Users → select your user → confirm, or turn off Confirm email under Authentication → Email.";
       }
       if (/rate limit/i.test(message)) {
-        message = "Too many attempts. Wait 30–60 minutes or add the user manually in Supabase → Authentication → Users.";
+        message = "Too many attempts. Wait 30–60 minutes, then try again.";
+      }
+      if (/invalid/i.test(message)) {
+        message = "Invalid email or password.";
       }
       return NextResponse.json({ error: message }, { status: 401 });
     }
-    const dbUser = await prisma.user.findFirst({
-      where: {
-        email: { equals: data.user.email, mode: "insensitive" },
-      },
-      include: {
-        employee: true
-      }
-    });
-    if (!dbUser) {
-      return NextResponse.json({
-        error:
-          "This email is not in your company HR database yet. Ask an admin to add you in Neon (or run npm run db:add-user), then sign in again. If you already have a Supabase account, use Sign in — not Sign up."
-      }, {
-        status: 403
-      });
-    }
 
-    if (data.user?.id && !dbUser.supabaseId) {
+    if (data.user?.id && data.user.id !== dbUser.supabaseId) {
       await prisma.user.update({
         where: { id: dbUser.id },
         data: { supabaseId: data.user.id },

@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { prisma } from "@/lib/prisma";
-import { DEFAULT_COMPANY_PASSWORD } from "@/lib/auth/default-password";
-import { getSupabaseAdmin, syncSupabaseAuthUser } from "@/lib/supabase/admin";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { isDemoMode } from "@/lib/auth/mode";
 
 export async function POST(request) {
@@ -27,9 +26,9 @@ export async function POST(request) {
     );
   }
 
-  if (newPassword === DEFAULT_COMPANY_PASSWORD) {
+  if (newPassword === currentPassword) {
     return NextResponse.json(
-      { error: "Choose a password different from the company default." },
+      { error: "New password must be different from your current password." },
       { status: 400 }
     );
   }
@@ -49,24 +48,26 @@ export async function POST(request) {
       );
     }
 
+    if (!dbUser.supabaseId) {
+      return NextResponse.json(
+        {
+          error:
+            "You have not set up your account yet. Go to Sign up, choose your password, then sign in.",
+        },
+        { status: 403 }
+      );
+    }
+
     const admin = getSupabaseAdmin();
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!admin || !supabaseUrl || !anonKey) {
       if (isDemoMode()) {
-        if (currentPassword !== DEFAULT_COMPANY_PASSWORD) {
-          return NextResponse.json(
-            {
-              error: `Invalid current password. New employees use the default: ${DEFAULT_COMPANY_PASSWORD}`,
-            },
-            { status: 401 }
-          );
-        }
         return NextResponse.json(
           {
             error:
-              "Password reset needs Supabase (SUPABASE_SERVICE_ROLE_KEY). In demo mode, continue signing in with the default password.",
+              "Password reset needs Supabase in production. In demo mode, use Sign up or contact your admin.",
           },
           { status: 503 }
         );
@@ -81,38 +82,22 @@ export async function POST(request) {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    let supabaseUserId = dbUser.supabaseId;
-
     const { data: signInData, error: signInError } = await authClient.auth.signInWithPassword({
       email: normalizedEmail,
       password: currentPassword,
     });
 
     if (signInError) {
-      const defaultOk = currentPassword === DEFAULT_COMPANY_PASSWORD;
-      if (!defaultOk) {
-        return NextResponse.json(
-          {
-            error: `Current password is incorrect. New employees: use default password ${DEFAULT_COMPANY_PASSWORD}`,
-          },
-          { status: 401 }
-        );
-      }
-      const synced = await syncSupabaseAuthUser(normalizedEmail, DEFAULT_COMPANY_PASSWORD);
-      if (!synced.supabaseId) {
-        return NextResponse.json(
-          { error: synced.error || "Could not verify your account. Contact HR." },
-          { status: 400 }
-        );
-      }
-      supabaseUserId = synced.supabaseId;
-    } else {
-      supabaseUserId = signInData.user?.id || supabaseUserId;
+      return NextResponse.json(
+        {
+          error:
+            "Current password is incorrect. If this is your first time, use Sign up instead of reset.",
+        },
+        { status: 401 }
+      );
     }
 
-    if (!supabaseUserId) {
-      return NextResponse.json({ error: "Could not verify account." }, { status: 400 });
-    }
+    const supabaseUserId = signInData.user?.id || dbUser.supabaseId;
 
     const { error: updateError } = await admin.auth.admin.updateUserById(supabaseUserId, {
       password: newPassword,
@@ -124,13 +109,6 @@ export async function POST(request) {
         { error: updateError.message || "Failed to update password" },
         { status: 500 }
       );
-    }
-
-    if (!dbUser.supabaseId) {
-      await prisma.user.update({
-        where: { id: dbUser.id },
-        data: { supabaseId: supabaseUserId },
-      });
     }
 
     return NextResponse.json({

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { DEMO_CREDENTIALS, DEFAULT_COMPANY_PASSWORD, IS_DEMO_MODE } from "@/lib/constants";
+import { DEMO_CREDENTIALS, DEMO_MODE_PASSWORD, IS_DEMO_MODE } from "@/lib/constants";
 import { Logo } from "@/components/brand/logo";
 
 export default function LoginPage() {
@@ -42,7 +42,7 @@ export default function LoginPage() {
 
   function quickLogin(demoEmail) {
     setEmail(demoEmail);
-    setPassword(DEFAULT_COMPANY_PASSWORD);
+    setPassword(DEMO_MODE_PASSWORD);
   }
 
   return (
@@ -101,7 +101,7 @@ export default function LoginPage() {
             {IS_DEMO_MODE && (
               <div className="mt-6">
                 <p className="text-xs text-muted-foreground mb-3">
-                  Demo accounts (password: {DEFAULT_COMPANY_PASSWORD})
+                  Demo accounts (local demo password only)
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                   {DEMO_CREDENTIALS.map((c) => (
@@ -121,6 +121,10 @@ export default function LoginPage() {
             )}
 
             <p className="mt-6 text-center text-sm text-muted-foreground">
+              <Link href="/signup" className="text-primary hover:underline">
+                Sign up
+              </Link>
+              <span className="mx-2">·</span>
               <Link href="/reset-password" className="text-primary hover:underline">
                 Reset password
               </Link>

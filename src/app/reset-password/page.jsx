@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { DEFAULT_COMPANY_PASSWORD } from "@/lib/constants";
 import { Logo } from "@/components/brand/logo";
 
 export default function ResetPasswordPage() {
@@ -58,14 +57,10 @@ export default function ResetPasswordPage() {
       <div className="hidden flex-1 flex-col justify-between bg-primary p-12 text-primary-foreground lg:flex">
         <Logo variant="icon" priority className="h-14 w-14 sm:h-16 sm:w-16" />
         <div>
-          <p className="mb-4 text-3xl font-bold leading-tight">Reset your password</p>
+          <p className="mb-4 text-3xl font-bold leading-tight">Change your password</p>
           <p className="text-primary-foreground/80 max-w-md">
-            New employees receive the default company password. Enter it below, then choose a
-            personal password you will use to sign in.
-          </p>
-          <p className="mt-6 rounded-lg border border-white/20 bg-white/10 px-4 py-3 text-sm">
-            <span className="font-medium">Default password:</span>{" "}
-            <code className="font-mono">{DEFAULT_COMPANY_PASSWORD}</code>
+            For employees who already signed up. First-time setup is done on the Sign up page with
+            your work email.
           </p>
         </div>
         <p className="text-sm text-primary-foreground/60">© {new Date().getFullYear()} Nexus HRMS</p>
@@ -76,8 +71,7 @@ export default function ResetPasswordPage() {
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl">Reset password</CardTitle>
             <CardDescription>
-              Use your work email and current password (default for new staff:{" "}
-              <span className="font-mono font-medium">{DEFAULT_COMPANY_PASSWORD}</span>)
+              Enter your work email, current password, and a new password.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -98,14 +92,10 @@ export default function ResetPasswordPage() {
                 <Input
                   id="current"
                   type="password"
-                  placeholder={DEFAULT_COMPANY_PASSWORD}
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   required
                 />
-                <p className="text-xs text-muted-foreground">
-                  Default for new employees: <span className="font-mono">{DEFAULT_COMPANY_PASSWORD}</span>
-                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="new">New password</Label>
@@ -139,12 +129,12 @@ export default function ResetPasswordPage() {
             </form>
 
             <p className="mt-6 text-center text-sm text-muted-foreground">
-              <Link href="/login" className="text-primary hover:underline">
-                Back to sign in
+              <Link href="/signup" className="text-primary hover:underline">
+                First time? Sign up
               </Link>
               <span className="mx-2">·</span>
-              <Link href="/" className="text-primary hover:underline">
-                Home
+              <Link href="/login" className="text-primary hover:underline">
+                Back to sign in
               </Link>
             </p>
           </CardContent>
