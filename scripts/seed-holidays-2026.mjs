@@ -31,14 +31,9 @@ async function main() {
   const org = await prisma.organization.findFirst({ orderBy: { createdAt: "asc" } });
   if (!org) throw new Error("No organization found.");
 
+  // Remove legacy US/2025 rows and old partial seeds
   await prisma.holiday.deleteMany({
-    where: {
-      organizationId: org.id,
-      date: {
-        gte: new Date("2026-01-01"),
-        lte: new Date("2026-12-31"),
-      },
-    },
+    where: { organizationId: org.id },
   });
 
   for (const h of HOLIDAYS_2026) {

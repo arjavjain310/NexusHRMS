@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -29,21 +29,8 @@ function HolidayRow({ holiday }) {
   );
 }
 
-export function HolidaysClient() {
-  const [holidays, setHolidays] = useState([]);
-  const [year, setYear] = useState(2026);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/holidays")
-      .then((r) => r.json())
-      .then((j) => {
-        setHolidays(j.data || []);
-        if (j.year) setYear(j.year);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+export function HolidaysClient({ initialHolidays, year = 2026 }) {
+  const holidays = initialHolidays ?? [];
 
   const { upcoming, past } = useMemo(() => {
     const today = startOfDay(new Date());
@@ -64,57 +51,55 @@ export function HolidaysClient() {
     <div>
       <PageHeader
         title="Holiday Calendar"
-        description="Company holidays (public) and optional floater leave days — India 2026"
+        description="India 2026 — public holidays for all and optional floater leave days"
       />
 
       <div className="mb-6 flex flex-wrap gap-3 text-sm">
         <span className="inline-flex items-center gap-2">
           <Badge variant="success">Public</Badge>
-          <span className="text-muted-foreground">Holiday for all (New Year, Republic Day, Independence Day, Gandhi Jayanti)</span>
+          <span className="text-muted-foreground">
+            New Year, Republic Day, Independence Day, Gandhi Jayanti
+          </span>
         </span>
         <span className="inline-flex items-center gap-2">
           <Badge variant="secondary">Floater leave</Badge>
-          <span className="text-muted-foreground">Optional — employees may apply as floater</span>
+          <span className="text-muted-foreground">Holi, Diwali, Eid, and other optional days</span>
         </span>
       </div>
 
-      {loading ? (
-        <p className="text-muted-foreground py-8 text-center">Loading holidays…</p>
-      ) : (
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Upcoming — {year}</CardTitle>
-              <CardDescription>{upcoming.length} holiday(s) ahead</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {upcoming.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4 text-center">
-                  No upcoming holidays in the calendar.
-                </p>
-              ) : (
-                upcoming.map((h) => <HolidayRow key={h.id} holiday={h} />)
-              )}
-            </CardContent>
-          </Card>
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Upcoming — {year}</CardTitle>
+            <CardDescription>{upcoming.length} holiday(s) ahead</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {upcoming.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                No upcoming holidays in the calendar.
+              </p>
+            ) : (
+              upcoming.map((h) => <HolidayRow key={h.id} holiday={h} />)
+            )}
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Past — {year}</CardTitle>
-              <CardDescription>{past.length} holiday(s) already observed</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {past.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4 text-center">
-                  No past holidays recorded yet.
-                </p>
-              ) : (
-                past.map((h) => <HolidayRow key={h.id} holiday={h} />)
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
+        <Card>
+          <CardHeader>
+            <CardTitle>Past — {year}</CardTitle>
+            <CardDescription>{past.length} holiday(s) already observed</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {past.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                No past holidays recorded yet.
+              </p>
+            ) : (
+              past.map((h) => <HolidayRow key={h.id} holiday={h} />)
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

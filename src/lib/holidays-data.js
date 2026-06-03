@@ -19,3 +19,23 @@ export const HOLIDAYS_2026 = [
   { name: "Guru Nanak Jayanti", date: "2026-11-24", isOptional: true },
   { name: "Christmas", date: "2026-12-25", isOptional: true },
 ];
+
+export function toHolidayRows(rows) {
+  return rows.map((h) => ({
+    id: h.id ?? h.date,
+    name: h.name,
+    date: typeof h.date === "string" ? h.date : h.date.toISOString(),
+    isOptional: Boolean(h.isOptional),
+  }));
+}
+
+export function getDefaultHolidays2026() {
+  return toHolidayRows(
+    HOLIDAYS_2026.map((h) => ({
+      id: h.date,
+      name: h.name,
+      date: new Date(`${h.date}T12:00:00.000Z`),
+      isOptional: h.isOptional,
+    }))
+  );
+}
