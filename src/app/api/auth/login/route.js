@@ -37,6 +37,7 @@ export async function POST(request) {
         employeeId: user.employee?.id,
         firstName: user.employee?.firstName,
         canManageEmployees: user.canManageEmployees,
+        canSubmitPerformanceReviews: user.canSubmitPerformanceReviews,
         name: user.employee ? `${user.employee.firstName} ${user.employee.lastName}` : undefined,
         avatarUrl: user.employee?.avatarUrl ?? undefined,
       });

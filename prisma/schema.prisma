@@ -123,6 +123,8 @@ model User {
   canPostAnnouncements   Boolean  @default(false)
   /// Admin can grant permission to approve or reject leave requests
   canApproveLeave        Boolean  @default(false)
+  /// Admin can grant permission to submit employee performance reviews
+  canSubmitPerformanceReviews Boolean @default(false)
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 
