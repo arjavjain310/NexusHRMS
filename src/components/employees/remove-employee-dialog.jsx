@@ -46,7 +46,8 @@ export function RemoveEmployeeDialog({ open, onClose, employees, onRemoved }) {
           <div>
             <CardTitle>Remove employee</CardTitle>
             <CardDescription>
-              Removes their login and marks them as terminated. Payroll history is kept.
+              Permanently deletes this employee, their work email, login account, and all records.
+              The same work email and employee code can be used when adding them again.
             </CardDescription>
           </div>
           <Button type="button" variant="ghost" size="icon" onClick={onClose}>

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
 import { canManageEmployees } from "@/lib/auth/employee-management";
 import { parseGender } from "@/lib/leave-eligibility";
+import { purgeEmployeeCompletely } from "@/lib/employees/purge";
 import { getAttendanceDayRange, serializeAttendanceRecord } from "@/lib/attendance";
 export async function GET(_request, {
   params
@@ -205,10 +206,6 @@ export async function DELETE(_request, { params }) {
       return NextResponse.json({ error: "Employee not found" }, { status: 404 });
     }
 
-    if (employee.status === "TERMINATED") {
-      return NextResponse.json({ error: "Employee is already removed." }, { status: 400 });
-    }
-
     if (employee.user?.role === "ADMIN") {
       const adminCount = await prisma.user.count({
         where: { organizationId: session.organizationId, role: "ADMIN" },
@@ -221,19 +218,11 @@ export async function DELETE(_request, { params }) {
       }
     }
 
-    await prisma.$transaction(async (tx) => {
-      if (employee.userId) {
-        await tx.user.delete({ where: { id: employee.userId } });
-      }
-      await tx.employee.update({
-        where: { id },
-        data: { status: "TERMINATED", userId: null },
-      });
-    });
+    await purgeEmployeeCompletely(prisma, employee);
 
     return NextResponse.json({
       success: true,
-      message: `${employee.firstName} ${employee.lastName} was removed from Nexus-HRMS.`,
+      message: `${employee.firstName} ${employee.lastName} was permanently removed. You can add them again with the same email or employee code.`,
     });
   } catch (e) {
     console.error("[employee DELETE]", e);

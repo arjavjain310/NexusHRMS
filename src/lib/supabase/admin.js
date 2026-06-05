@@ -60,3 +60,29 @@ export async function syncSupabaseAuthUser(email, password) {
 
   return { supabaseId: existing.id, updated: true };
 }
+
+/** Remove Supabase auth account so the work email can sign up again */
+export async function deleteSupabaseAuthUser(email) {
+  const admin = getSupabaseAdmin();
+  if (!admin || !email) return { skipped: true };
+
+  const normalized = email.trim().toLowerCase();
+  const { data: list, error: listError } = await admin.auth.admin.listUsers({
+    page: 1,
+    perPage: 1000,
+  });
+  if (listError) {
+    console.error("[deleteSupabaseAuthUser list]", listError.message);
+    return { error: listError.message };
+  }
+
+  const existing = list.users.find((u) => u.email?.toLowerCase() === normalized);
+  if (!existing) return { deleted: false };
+
+  const { error: deleteError } = await admin.auth.admin.deleteUser(existing.id);
+  if (deleteError) {
+    console.error("[deleteSupabaseAuthUser]", deleteError.message);
+    return { error: deleteError.message };
+  }
+  return { deleted: true };
+}

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
 import { canManageEmployees } from "@/lib/auth/employee-management";
 import { parseGender } from "@/lib/leave-eligibility";
+import { purgeEmployeeCompletely } from "@/lib/employees/purge";
 
 const VALID_ROLES = ["ADMIN", "SENIOR_MANAGER", "HR_RECRUITER", "EMPLOYEE"];
 const VALID_STATUSES = ["ACTIVE", "ON_LEAVE", "TERMINATED", "PROBATION"];
@@ -78,17 +79,56 @@ export async function POST(request) {
   }
 
   try {
-    const existingUser = await prisma.user.findFirst({
-      where: { email: { equals: normalizedEmail, mode: "insensitive" } },
+    const orgId = session.organizationId;
+
+    const conflictingEmployee = await prisma.employee.findFirst({
+      where: {
+        organizationId: orgId,
+        OR: [
+          { email: { equals: normalizedEmail, mode: "insensitive" } },
+          { employeeCode },
+        ],
+      },
+      include: { user: { select: { id: true, role: true } } },
     });
-    if (existingUser) {
-      return NextResponse.json(
-        { error: "A user with this email already exists." },
-        { status: 409 }
-      );
+
+    if (conflictingEmployee) {
+      if (conflictingEmployee.status === "TERMINATED") {
+        await purgeEmployeeCompletely(prisma, conflictingEmployee);
+      } else {
+        const sameEmail =
+          conflictingEmployee.email.toLowerCase() === normalizedEmail;
+        return NextResponse.json(
+          {
+            error: sameEmail
+              ? "An active employee with this email already exists."
+              : "This employee code is already assigned to another active employee.",
+          },
+          { status: 409 }
+        );
+      }
     }
 
-    const orgId = session.organizationId;
+    const existingUser = await prisma.user.findFirst({
+      where: { email: { equals: normalizedEmail, mode: "insensitive" } },
+      include: { employee: { select: { id: true, status: true } } },
+    });
+    if (existingUser) {
+      if (!existingUser.employee) {
+        await prisma.user.delete({ where: { id: existingUser.id } });
+      } else if (existingUser.employee.status === "TERMINATED") {
+        const stale = await prisma.employee.findUnique({
+          where: { id: existingUser.employee.id },
+          include: { user: { select: { id: true, role: true } } },
+        });
+        if (stale) await purgeEmployeeCompletely(prisma, stale);
+      } else {
+        return NextResponse.json(
+          { error: "A user with this email already exists." },
+          { status: 409 }
+        );
+      }
+    }
 
     if (body.departmentId) {
       const dept = await prisma.department.findFirst({
