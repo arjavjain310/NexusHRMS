@@ -123,7 +123,6 @@ model User {
   chatMessages   ChatMessage[]
   notifications  Notification[]
   announcements  Announcement[]
-  recoveryOtps   AdminRecoveryOtp[]
 
   @@index([organizationId])
   @@index([role])
@@ -514,16 +513,3 @@ model AttendanceCorrection {
   @@index([status])
 }
 
-model AdminRecoveryOtp {
-  id        String    @id @default(cuid())
-  userId    String
-  otpHash   String
-  expiresAt DateTime
-  usedAt    DateTime?
-  createdAt DateTime  @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, createdAt])
-  @@index([expiresAt])
-}

@@ -129,11 +129,6 @@ export default function LoginPage() {
                 Reset password
               </Link>
               <span className="mx-2">·</span>
-              <Link href="/admin-recovery" className="text-primary hover:underline">
-                Admin forgot password?
-              </Link>
-            </p>
-            <p className="mt-2 text-center text-sm text-muted-foreground">
               <Link href="/" className="text-primary hover:underline">
                 Back to home
               </Link>

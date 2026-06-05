@@ -59,8 +59,8 @@ export default function ResetPasswordPage() {
         <div>
           <p className="mb-4 text-3xl font-bold leading-tight">Change your password</p>
           <p className="text-primary-foreground/80 max-w-md">
-            For employees who already signed up. First-time setup is done on the Sign up page with
-            your work email.
+            Already have an account? Enter your current password to set a new one. First-time users
+            should use Sign up with their work email instead.
           </p>
         </div>
         <p className="text-sm text-primary-foreground/60">© {new Date().getFullYear()} Nexus HRMS</p>
