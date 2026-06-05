@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth/session";
 import { canManageEmployees } from "@/lib/auth/employee-management";
 import { parseGender } from "@/lib/leave-eligibility";
 import { purgeEmployeeCompletely } from "@/lib/employees/purge";
+import { salaryStructurePayload, validateRequiredBaseSalary } from "@/lib/employees/salary";
 
 const VALID_ROLES = ["ADMIN", "SENIOR_MANAGER", "HR_RECRUITER", "EMPLOYEE"];
 const VALID_STATUSES = ["ACTIVE", "ON_LEAVE", "TERMINATED", "PROBATION"];
@@ -70,6 +71,12 @@ export async function POST(request) {
       { status: 400 }
     );
   }
+
+  const salaryCheck = validateRequiredBaseSalary(body.baseSalary);
+  if (!salaryCheck.ok) {
+    return NextResponse.json({ error: salaryCheck.error }, { status: 400 });
+  }
+  const baseSalary = salaryCheck.value;
 
   const role = VALID_ROLES.includes(body.role) ? body.role : "EMPLOYEE";
   const status = VALID_STATUSES.includes(body.status) ? body.status : "ACTIVE";
@@ -166,11 +173,6 @@ export async function POST(request) {
       }
     }
 
-    const baseSalary =
-      body.baseSalary != null && body.baseSalary !== ""
-        ? Number(body.baseSalary)
-        : null;
-
     const employee = await prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
@@ -210,19 +212,13 @@ export async function POST(request) {
         },
       });
 
-      if (baseSalary != null && !Number.isNaN(baseSalary) && baseSalary > 0) {
-        await tx.salaryStructure.create({
-          data: {
-            employeeId: emp.id,
-            baseSalary,
-            hra: Math.round(baseSalary * 0.2),
-            allowances: Math.round(baseSalary * 0.1),
-            deductions: Math.round(baseSalary * 0.05),
-            taxRate: 0,
-            currency: "INR",
-          },
-        });
-      }
+      await tx.salaryStructure.create({
+        data: {
+          employeeId: emp.id,
+          ...salaryStructurePayload(baseSalary),
+          taxRate: 0,
+        },
+      });
 
       return emp;
     });

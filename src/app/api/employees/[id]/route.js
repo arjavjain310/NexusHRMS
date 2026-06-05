@@ -8,7 +8,13 @@ import {
 } from "@/lib/auth/employee-management";
 import { parseGender } from "@/lib/leave-eligibility";
 import { purgeEmployeeCompletely } from "@/lib/employees/purge";
+import {
+  salaryStructurePayload,
+  validateRequiredBaseSalary,
+} from "@/lib/employees/salary";
 import { getAttendanceDayRange, serializeAttendanceRecord } from "@/lib/attendance";
+
+const VALID_STATUSES = ["ACTIVE", "ON_LEAVE", "TERMINATED", "PROBATION"];
 export async function GET(_request, {
   params
 }) {
@@ -44,6 +50,7 @@ export async function GET(_request, {
           }
         },
         salaryStructure: true,
+        user: { select: { role: true } },
         organization: {
           select: {
             name: true
@@ -86,7 +93,7 @@ export async function GET(_request, {
     } else if (todayAttendance?.checkIn) {
       attendanceStatus = "CLOCKED_IN";
     }
-    const { salaryStructure: _salary, ...profile } = employee;
+    const { salaryStructure, ...profile } = employee;
     return NextResponse.json({
       success: true,
       data: {
@@ -95,6 +102,7 @@ export async function GET(_request, {
         documents: employee.documents ?? [],
         attendanceStatus,
         todayAttendance: todayAttendance ? serializeAttendanceRecord(todayAttendance) : null,
+        baseSalary: salaryStructure ? Number(salaryStructure.baseSalary) : null,
       },
     });
   } catch (error) {
@@ -141,19 +149,20 @@ export async function PATCH(request, {
     );
   }
 
-  const data = {};
+  const employeeData = {};
   for (const key of allowedKeys) {
-    if (key in body) data[key] = body[key];
+    if (key in body && key !== "baseSalary") employeeData[key] = body[key];
   }
-  if ("gender" in data) {
-    const gender = parseGender(data.gender);
+
+  if ("gender" in employeeData) {
+    const gender = parseGender(employeeData.gender);
     if (!gender) {
       return NextResponse.json(
         { error: "Gender must be Male, Female, or Other." },
         { status: 400 }
       );
     }
-    data.gender = gender;
+    employeeData.gender = gender;
   }
 
   const VALID_ROLES = ["ADMIN", "SENIOR_MANAGER", "HR_RECRUITER", "EMPLOYEE"];
@@ -168,10 +177,28 @@ export async function PATCH(request, {
     }
   }
 
+  let baseSalaryUpdate = null;
+  if (canManage && allowedKeys.includes("baseSalary")) {
+    if (!("baseSalary" in body)) {
+      return NextResponse.json(
+        { error: "Monthly Base Salary is required." },
+        { status: 400 }
+      );
+    }
+    const salaryCheck = validateRequiredBaseSalary(body.baseSalary);
+    if (!salaryCheck.ok) {
+      return NextResponse.json({ error: salaryCheck.error }, { status: 400 });
+    }
+    baseSalaryUpdate = salaryCheck.value;
+  }
+
   try {
     const existing = await prisma.employee.findFirst({
       where: { id, organizationId: session.organizationId },
-      include: { user: { select: { id: true, role: true } } },
+      include: {
+        user: { select: { id: true, role: true, email: true } },
+        salaryStructure: { select: { baseSalary: true } },
+      },
     });
     if (!existing) {
       return NextResponse.json({ error: "Employee not found" }, { status: 404 });
@@ -195,33 +222,170 @@ export async function PATCH(request, {
           );
         }
       }
-      await prisma.user.update({
-        where: { id: existing.userId },
-        data: { role: roleUpdate },
-      });
     }
 
-    const employee = await prisma.employee.update({
-      where: { id },
-      data,
-      include: {
-        department: true,
-        designation: true,
-        manager: { select: { id: true, firstName: true, lastName: true } },
-        organization: { select: { name: true } },
-        user: { select: { role: true } },
-      },
+    if ("email" in employeeData) {
+      const normalizedEmail = employeeData.email?.trim().toLowerCase();
+      if (!normalizedEmail) {
+        return NextResponse.json({ error: "Work email is required." }, { status: 400 });
+      }
+      const emailConflict = await prisma.employee.findFirst({
+        where: {
+          organizationId: session.organizationId,
+          email: { equals: normalizedEmail, mode: "insensitive" },
+          NOT: { id },
+        },
+      });
+      if (emailConflict) {
+        return NextResponse.json(
+          { error: "An active employee with this email already exists." },
+          { status: 409 }
+        );
+      }
+      employeeData.email = normalizedEmail;
+    }
+
+    if ("employeeCode" in employeeData) {
+      const employeeCode = employeeData.employeeCode?.trim();
+      if (!employeeCode) {
+        return NextResponse.json({ error: "Employee code is required." }, { status: 400 });
+      }
+      const codeConflict = await prisma.employee.findFirst({
+        where: {
+          organizationId: session.organizationId,
+          employeeCode,
+          NOT: { id },
+        },
+      });
+      if (codeConflict) {
+        return NextResponse.json(
+          { error: "This employee code is already assigned to another employee." },
+          { status: 409 }
+        );
+      }
+      employeeData.employeeCode = employeeCode;
+    }
+
+    if ("status" in employeeData && !VALID_STATUSES.includes(employeeData.status)) {
+      return NextResponse.json({ error: "Invalid employment status." }, { status: 400 });
+    }
+
+    if ("dateOfJoining" in employeeData) {
+      employeeData.dateOfJoining = new Date(employeeData.dateOfJoining || Date.now());
+    }
+
+    if (employeeData.departmentId) {
+      const dept = await prisma.department.findFirst({
+        where: { id: employeeData.departmentId, organizationId: session.organizationId },
+      });
+      if (!dept) {
+        return NextResponse.json({ error: "Invalid department." }, { status: 400 });
+      }
+    }
+
+    if (employeeData.designationId) {
+      const desig = await prisma.designation.findFirst({
+        where: {
+          id: employeeData.designationId,
+          department: { organizationId: session.organizationId },
+        },
+      });
+      if (!desig) {
+        return NextResponse.json({ error: "Invalid designation." }, { status: 400 });
+      }
+      if (employeeData.departmentId && desig.departmentId !== employeeData.departmentId) {
+        return NextResponse.json(
+          { error: "Designation does not belong to the selected department." },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (employeeData.managerId) {
+      if (employeeData.managerId === id) {
+        return NextResponse.json(
+          { error: "An employee cannot be their own reporting manager." },
+          { status: 400 }
+        );
+      }
+      const mgr = await prisma.employee.findFirst({
+        where: { id: employeeData.managerId, organizationId: session.organizationId },
+      });
+      if (!mgr) {
+        return NextResponse.json({ error: "Invalid reporting manager." }, { status: 400 });
+      }
+    }
+
+    const employee = await prisma.$transaction(async (tx) => {
+      if (roleUpdate && !isSelf && canManage && existing.userId) {
+        await tx.user.update({
+          where: { id: existing.userId },
+          data: { role: roleUpdate },
+        });
+      }
+
+      if ("email" in employeeData && existing.userId) {
+        await tx.user.update({
+          where: { id: existing.userId },
+          data: { email: employeeData.email },
+        });
+      }
+
+      const updated = await tx.employee.update({
+        where: { id },
+        data: employeeData,
+        include: {
+          department: true,
+          designation: true,
+          manager: { select: { id: true, firstName: true, lastName: true } },
+          organization: { select: { name: true } },
+          user: { select: { role: true } },
+          salaryStructure: true,
+        },
+      });
+
+      if (baseSalaryUpdate != null) {
+        await tx.salaryStructure.upsert({
+          where: { employeeId: id },
+          create: { employeeId: id, ...salaryStructurePayload(baseSalaryUpdate) },
+          update: salaryStructurePayload(baseSalaryUpdate),
+        });
+        const withSalary = await tx.employee.findUnique({
+          where: { id },
+          include: {
+            department: true,
+            designation: true,
+            manager: { select: { id: true, firstName: true, lastName: true } },
+            organization: { select: { name: true } },
+            user: { select: { role: true } },
+            salaryStructure: true,
+          },
+        });
+        return withSalary;
+      }
+
+      return updated;
     });
+
     return NextResponse.json({
       success: true,
-      data: employee
+      data: {
+        ...employee,
+        baseSalary: employee.salaryStructure
+          ? Number(employee.salaryStructure.baseSalary)
+          : null,
+      },
+      message: `${employee.firstName} ${employee.lastName} was updated successfully.`,
     });
   } catch (e) {
-    return NextResponse.json({
-      error: "Update failed"
-    }, {
-      status: 500
-    });
+    console.error("[employee PATCH]", e);
+    if (e.code === "P2002") {
+      return NextResponse.json(
+        { error: "Employee code or email already exists in your organization." },
+        { status: 409 }
+      );
+    }
+    return NextResponse.json({ error: "Update failed" }, { status: 500 });
   }
 }
 

@@ -106,6 +106,17 @@ function RecruiterDashboard({
         <StatCard title="In Screening" value={pipelineCount(data.pipeline, "SCREENING")} icon={UserCheck} />
         <StatCard title="Interviews" value={pipelineCount(data.pipeline, "INTERVIEW")} icon={Building2} />
       </div>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <StatCard title="Days Present" value={data.daysPresent ?? 0} change="This month" icon={Clock} />
+        <StatCard title="Leave Balance" value={`${data.leaveBalance ?? 14} days`} icon={CalendarDays} />
+        <StatCard
+          title="Last Net Pay"
+          value={data.netPay ? formatCurrency(data.netPay) : "—"}
+          change="Open Payroll for details"
+          trend="neutral"
+          icon={Wallet}
+        />
+      </div>
       <Card>
         <CardHeader>
           <CardTitle>Candidate Pipeline</CardTitle>

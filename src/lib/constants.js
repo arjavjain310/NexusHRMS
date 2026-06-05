@@ -43,7 +43,7 @@ export const NAV_ITEMS = [
   { title: "Leave", href: "/leave", icon: "CalendarDays" },
   { title: "Leave Management", href: "/leave-management", icon: "CalendarRange", roles: ["ADMIN", "SENIOR_MANAGER", "HR_RECRUITER"] },
   { title: "Approvals", href: "/approvals", icon: "ClipboardCheck", roles: ["ADMIN"] },
-  { title: "Payroll", href: "/payroll", icon: "Wallet", roles: ["ADMIN", "SENIOR_MANAGER", "EMPLOYEE"] },
+  { title: "Payroll", href: "/payroll", icon: "Wallet" },
   { title: "Performance", href: "/performance", icon: "TrendingUp" },
   { title: "Recruitment", href: "/recruitment", icon: "Briefcase", roles: ["ADMIN", "HR_RECRUITER", "SENIOR_MANAGER"] },
   { title: "Resume AI", href: "/recruitment/resume-screening", icon: "FileSearch", roles: ["ADMIN", "HR_RECRUITER"] },

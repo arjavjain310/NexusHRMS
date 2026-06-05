@@ -25,6 +25,7 @@ export function EmployeesClient({ canManage = false, isAdmin = false }) {
   const [showRemove, setShowRemove] = useState(false);
   const [showAccess, setShowAccess] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
 
   const fetchEmployees = useCallback(async () => {
     setLoading(true);
@@ -78,8 +79,18 @@ export function EmployeesClient({ canManage = false, isAdmin = false }) {
         employee={editing}
         canManage={canManage}
         onClose={() => setEditing(null)}
-        onSaved={() => fetchEmployees()}
+        onSaved={(_data, message) => {
+          fetchEmployees();
+          setSuccessMessage(message || "Employee updated successfully.");
+          setTimeout(() => setSuccessMessage(null), 4000);
+        }}
       />
+
+      {successMessage && (
+        <p className="mb-4 text-sm text-emerald-700 dark:text-emerald-300 rounded-md border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-2">
+          {successMessage}
+        </p>
+      )}
 
       <div className="mb-6 relative max-w-md">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -159,7 +170,8 @@ export function EmployeesClient({ canManage = false, isAdmin = false }) {
                         variant="ghost"
                         size="icon"
                         className="shrink-0"
-                        aria-label={`Edit ${emp.firstName} ${emp.lastName}`}
+                        aria-label={`Edit employee ${emp.firstName} ${emp.lastName}`}
+                        title="Edit employee"
                         onClick={() => setEditing(emp)}
                       >
                         <Pencil className="h-4 w-4" />

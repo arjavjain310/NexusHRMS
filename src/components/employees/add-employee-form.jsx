@@ -82,6 +82,10 @@ export function AddEmployeeForm({ open, onClose, onCreated }) {
       setError("Gender is required.");
       return;
     }
+    if (!form.baseSalary || Number(form.baseSalary) <= 0) {
+      setError("Monthly Base Salary is required.");
+      return;
+    }
     setLoading(true);
     setError(null);
     setSuccess(null);
@@ -94,7 +98,7 @@ export function AddEmployeeForm({ open, onClose, onCreated }) {
           managerId: form.managerId || null,
           departmentId: form.departmentId || null,
           designationId: form.designationId || null,
-          baseSalary: form.baseSalary ? Number(form.baseSalary) : null,
+          baseSalary: Number(form.baseSalary),
         }),
       });
       const json = await res.json();
@@ -310,13 +314,14 @@ export function AddEmployeeForm({ open, onClose, onCreated }) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="baseSalary">Monthly base salary (INR)</Label>
+                <Label htmlFor="baseSalary">Monthly base salary (INR) *</Label>
                 <Input
                   id="baseSalary"
                   type="number"
-                  min="0"
+                  min="1"
                   step="1"
-                  placeholder="Optional"
+                  required
+                  placeholder="e.g. 50000"
                   value={form.baseSalary}
                   onChange={(e) => updateField("baseSalary", e.target.value)}
                 />

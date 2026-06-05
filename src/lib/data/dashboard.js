@@ -44,8 +44,9 @@ export async function getDashboardData(organizationId, role, employeeId) {
     performanceChart,
   };
 
-  if (role === "EMPLOYEE" && employeeId) {
-    const [leaveBalance, myAttendance, latestPayslip] = await Promise.all([
+  let employeeStats = null;
+  if (employeeId && (role === "EMPLOYEE" || role === "HR_RECRUITER" || role === "SENIOR_MANAGER" || role === "ADMIN")) {
+    const [approvedAnnualLeave, myAttendance, latestPayslip] = await Promise.all([
       prisma.leaveRequest.count({
         where: { employeeId, status: "APPROVED", type: "ANNUAL" },
       }),
@@ -62,12 +63,15 @@ export async function getDashboardData(organizationId, role, employeeId) {
       }),
     ]);
 
-    return {
-      ...base,
-      leaveBalance: Math.max(0, 20 - leaveBalance),
+    employeeStats = {
+      leaveBalance: Math.max(0, 20 - approvedAnnualLeave),
       daysPresent: myAttendance,
       netPay: latestPayslip ? Number(latestPayslip.netPay) : null,
     };
+  }
+
+  if (role === "EMPLOYEE" && employeeId) {
+    return { ...base, ...employeeStats };
   }
 
   if (role === "HR_RECRUITER") {
@@ -80,7 +84,7 @@ export async function getDashboardData(organizationId, role, employeeId) {
       status: row.status,
       _count: row._count?._all ?? 0,
     }));
-    return { ...base, pipeline };
+    return { ...base, pipeline, ...(employeeStats || {}) };
   }
 
   const payrollTotal = await prisma.payslip.aggregate({
