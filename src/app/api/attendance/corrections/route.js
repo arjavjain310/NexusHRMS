@@ -54,10 +54,11 @@ export async function POST(request) {
 
     await logActivity(session.organizationId, {
       userId: session.id,
+      employeeId: session.employeeId,
       action: "attendance_correction_requested",
       entity: "AttendanceCorrection",
       entityId: correction.id,
-      metadata: { date },
+      metadata: { date, employeeName: session.name || undefined },
     });
 
     return NextResponse.json({ success: true, data: correction });

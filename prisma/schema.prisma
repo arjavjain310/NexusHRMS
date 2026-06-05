@@ -100,8 +100,9 @@ model Organization {
   users       User[]
   departments Department[]
   employees   Employee[]
-  holidays    Holiday[]
-  jobPosts    JobPost[]
+  holidays      Holiday[]
+  jobPosts      JobPost[]
+  announcements Announcement[]
 }
 
 model User {
@@ -111,14 +112,17 @@ model User {
   role               UserRole @default(EMPLOYEE)
   organizationId     String
   /// Admin can grant HR (or others) permission to add/remove employees
-  canManageEmployees Boolean  @default(false)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  canManageEmployees     Boolean  @default(false)
+  /// Admin can grant permission to post organization-wide announcements
+  canPostAnnouncements   Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 
-  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  employee      Employee?
-  chatMessages  ChatMessage[]
-  notifications Notification[]
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  employee       Employee?
+  chatMessages   ChatMessage[]
+  notifications  Notification[]
+  announcements  Announcement[]
 
   @@index([organizationId])
   @@index([role])
@@ -429,17 +433,23 @@ model ChatMessage {
 }
 
 model Announcement {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   organizationId String
+  authorId       String
   title          String
-  content        String   @db.Text
-  priority       String   @default("normal")
-  publishedAt    DateTime @default(now())
+  content        String    @db.Text
+  priority       String    @default("normal")
+  publishedAt    DateTime  @default(now())
   expiresAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  reads AnnouncementRead[]
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  author       User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  reads        AnnouncementRead[]
 
-  @@index([organizationId])
+  @@index([organizationId, publishedAt])
+  @@index([authorId])
 }
 
 model AnnouncementRead {
@@ -458,6 +468,8 @@ model ActivityLog {
   id             String   @id @default(cuid())
   organizationId String
   userId         String?
+  /// Subject employee for privacy-scoped activity feed
+  employeeId     String?
   action         String
   entity         String?
   entityId       String?
@@ -465,6 +477,7 @@ model ActivityLog {
   createdAt      DateTime @default(now())
 
   @@index([organizationId, createdAt])
+  @@index([organizationId, employeeId, createdAt])
 }
 
 model Notification {

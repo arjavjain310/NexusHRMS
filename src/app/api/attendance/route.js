@@ -3,6 +3,7 @@ import { subDays } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
 import { getAttendanceDate, getAttendanceDayRange, serializeAttendanceRecord } from "@/lib/attendance";
+import { logActivity } from "@/lib/notifications";
 async function findTodayRecord(employeeId) {
   const {
     start,
@@ -152,6 +153,14 @@ export async function POST(request) {
           }
         });
       }
+      await logActivity(session.organizationId, {
+        userId: session.id,
+        employeeId: session.employeeId,
+        action: "attendance_check_in",
+        entity: "Attendance",
+        entityId: record.id,
+        metadata: { employeeName: session.name || undefined },
+      });
       const allRecords = await listRecords(session.employeeId, session.organizationId);
       return NextResponse.json({
         success: true,
@@ -181,6 +190,14 @@ export async function POST(request) {
       data: {
         checkOut: now
       }
+    });
+    await logActivity(session.organizationId, {
+      userId: session.id,
+      employeeId: session.employeeId,
+      action: "attendance_check_out",
+      entity: "Attendance",
+      entityId: record.id,
+      metadata: { employeeName: session.name || undefined },
     });
     const allRecords = await listRecords(session.employeeId, session.organizationId);
     return NextResponse.json({

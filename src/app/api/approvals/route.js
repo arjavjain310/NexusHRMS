@@ -102,6 +102,7 @@ export async function PATCH(request) {
 
       await logActivity(session.organizationId, {
         userId: session.id,
+        employeeId: leave.employeeId,
         action: `leave_${status.toLowerCase()}`,
         entity: "LeaveRequest",
         entityId: leave.id,
@@ -163,9 +164,13 @@ export async function PATCH(request) {
 
       await logActivity(session.organizationId, {
         userId: session.id,
+        employeeId: correction.employeeId,
         action: `attendance_correction_${status.toLowerCase()}`,
         entity: "AttendanceCorrection",
         entityId: correction.id,
+        metadata: {
+          employeeName: `${correction.employee.firstName} ${correction.employee.lastName}`,
+        },
       });
 
       return NextResponse.json({ success: true, data: correction });

@@ -419,34 +419,63 @@ async function main() {
     }).catch(() => {});
   }
 
+  const mayaEmployeeId = employee?.employee?.id;
+
   const activitySeed = [
     {
-      action: "payroll_published",
-      metadata: { employeeName: "Maya Patel", month: "April", year: 2026 },
+      action: "leave_requested",
+      employeeId: mayaEmployeeId,
+      metadata: { employeeName: "Maya Patel", type: "CASUAL" },
     },
     {
       action: "leave_approved",
+      employeeId: mayaEmployeeId,
       metadata: { employeeName: "Maya Patel" },
     },
     {
-      action: "policy_update",
-      metadata: { title: "Remote work policy v2" },
-    },
-    {
-      action: "interview_scheduled",
-      metadata: { role: "Full Stack Developer" },
+      action: "attendance_check_in",
+      employeeId: mayaEmployeeId,
+      metadata: { employeeName: "Maya Patel" },
     },
   ];
 
   for (const a of activitySeed) {
+    if (!a.employeeId) continue;
     await prisma.activityLog.create({
       data: {
         organizationId: org.id,
         userId: admin?.id ?? null,
+        employeeId: a.employeeId,
         action: a.action,
         metadata: a.metadata,
       },
     }).catch(() => {});
+  }
+
+  if (admin) {
+    const samples = [
+      {
+        title: "Quarterly meeting at 3 PM",
+        content: "All hands quarterly review today at 3 PM in the main conference room.",
+        priority: "high",
+      },
+      {
+        title: "Tomorrow is a working holiday",
+        content: "Office remains open; attendance is mandatory unless on approved leave.",
+        priority: "normal",
+      },
+    ];
+    for (const s of samples) {
+      await prisma.announcement.create({
+        data: {
+          organizationId: org.id,
+          authorId: admin.id,
+          title: s.title,
+          content: s.content,
+          priority: s.priority,
+        },
+      }).catch(() => {});
+    }
   }
 
   console.log("Seed completed for", org.name);

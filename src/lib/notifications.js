@@ -11,12 +11,16 @@ export async function createNotification({ userId, type, title, message, href })
   }
 }
 
-export async function logActivity(organizationId, { userId, action, entity, entityId, metadata }) {
+export async function logActivity(
+  organizationId,
+  { userId, employeeId, action, entity, entityId, metadata }
+) {
   try {
     return await prisma.activityLog.create({
       data: {
         organizationId,
         userId: userId ?? null,
+        employeeId: employeeId ?? null,
         action,
         entity: entity ?? null,
         entityId: entityId ?? null,

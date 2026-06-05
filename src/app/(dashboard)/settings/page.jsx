@@ -1,11 +1,17 @@
+import { getSession } from "@/lib/auth/session";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnnouncementAccessSettings } from "@/components/dashboard/announcement-access-settings";
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const session = await getSession();
+  const isAdmin = session?.role === "ADMIN";
+
   return (
     <div>
       <PageHeader title="Settings" description="Organization and system configuration" />
       <div className="grid gap-6 max-w-2xl">
+        {isAdmin && <AnnouncementAccessSettings />}
         <Card>
           <CardHeader>
             <CardTitle>Organization</CardTitle>

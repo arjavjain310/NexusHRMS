@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
+import { getRecentActivityFeed } from "@/lib/activity/feed";
 
 export async function GET() {
   const session = await getSession();
@@ -9,13 +9,14 @@ export async function GET() {
   }
 
   try {
-    const items = await prisma.activityLog.findMany({
-      where: { organizationId: session.organizationId },
-      orderBy: { createdAt: "desc" },
-      take: 12,
-    });
-    return NextResponse.json({ success: true, data: items });
+    const feed = await getRecentActivityFeed(session);
+    return NextResponse.json({ success: true, data: feed.items, meta: feed.meta });
   } catch (e) {
-    return NextResponse.json({ success: true, data: [] });
+    console.error("[activity GET]", e);
+    return NextResponse.json({
+      success: true,
+      data: [],
+      meta: { canPostAnnouncements: false, canManageAnnouncementAccess: false, isApprover: false },
+    });
   }
 }

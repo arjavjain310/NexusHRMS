@@ -16,14 +16,16 @@ export default async function DashboardPage() {
   } catch (e) {
     data = getMockDashboardData(session.role);
   }
-  return <div>
-      <PageHeader title={`Good ${getGreeting()}, ${session.name?.split(" ")[0] || session.email?.split("@")[0] || "there"}`} description={`${ROLE_LABELS[session.role]} dashboard — overview of your HR workspace`} />
+  const firstName =
+    session.name?.split(" ")[0] || session.email?.split("@")[0] || "there";
+
+  return (
+    <div>
+      <PageHeader
+        title={`Hi, ${firstName}`}
+        description={`${ROLE_LABELS[session.role]} dashboard — overview of your HR workspace`}
+      />
       <RoleDashboard role={session.role} data={data} />
-    </div>;
-}
-function getGreeting() {
-  const h = new Date().getHours();
-  if (h < 12) return "morning";
-  if (h < 17) return "afternoon";
-  return "evening";
+    </div>
+  );
 }
