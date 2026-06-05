@@ -123,6 +123,7 @@ model User {
   chatMessages   ChatMessage[]
   notifications  Notification[]
   announcements  Announcement[]
+  recoveryOtps   AdminRecoveryOtp[]
 
   @@index([organizationId])
   @@index([role])
@@ -435,17 +436,17 @@ model ChatMessage {
 model Announcement {
   id             String    @id @default(cuid())
   organizationId String
-  authorId       String
+  authorId       String?
   title          String
   content        String    @db.Text
   priority       String    @default("normal")
   publishedAt    DateTime  @default(now())
   expiresAt      DateTime?
   createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  updatedAt      DateTime  @default(now()) @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  author       User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author       User?        @relation(fields: [authorId], references: [id], onDelete: SetNull)
   reads        AnnouncementRead[]
 
   @@index([organizationId, publishedAt])
@@ -511,4 +512,18 @@ model AttendanceCorrection {
 
   @@index([employeeId])
   @@index([status])
+}
+
+model AdminRecoveryOtp {
+  id        String    @id @default(cuid())
+  userId    String
+  otpHash   String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([expiresAt])
 }
