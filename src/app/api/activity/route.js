@@ -16,7 +16,11 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       data: [],
-      meta: { canPostAnnouncements: false, canManageAnnouncementAccess: false, isApprover: false },
+      meta: {
+        canPostAnnouncements: false,
+        canManageAnnouncementAccess: false,
+        canManageLeave: false,
+      },
     });
   }
 }

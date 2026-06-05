@@ -13,6 +13,7 @@ import {
   Settings,
   User,
   ClipboardCheck,
+  CalendarRange,
 } from "lucide-react";
 
 const ICON_MAP = {
@@ -30,6 +31,7 @@ const ICON_MAP = {
   PartyPopper,
   Settings,
   ClipboardCheck,
+  CalendarRange,
 };
 
 export function getNavIcon(name) {

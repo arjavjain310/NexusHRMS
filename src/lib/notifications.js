@@ -38,7 +38,7 @@ export async function notifyApprovers(organizationId, payload) {
   const approvers = await prisma.user.findMany({
     where: {
       organizationId,
-      role: { in: ["ADMIN", "SENIOR_MANAGER"] },
+      role: { in: ["ADMIN", "SENIOR_MANAGER", "HR_RECRUITER"] },
     },
     select: { id: true },
   });

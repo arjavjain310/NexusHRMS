@@ -41,6 +41,7 @@ export const NAV_ITEMS = [
   { title: "Employees", href: "/employees", icon: "Users", roles: ["ADMIN", "SENIOR_MANAGER", "HR_RECRUITER"] },
   { title: "Attendance", href: "/attendance", icon: "Clock" },
   { title: "Leave", href: "/leave", icon: "CalendarDays" },
+  { title: "Leave Management", href: "/leave-management", icon: "CalendarRange", roles: ["ADMIN", "SENIOR_MANAGER", "HR_RECRUITER"] },
   { title: "Approvals", href: "/approvals", icon: "ClipboardCheck", roles: ["ADMIN", "SENIOR_MANAGER"] },
   { title: "Payroll", href: "/payroll", icon: "Wallet", roles: ["ADMIN", "SENIOR_MANAGER", "EMPLOYEE"] },
   { title: "Performance", href: "/performance", icon: "TrendingUp" },

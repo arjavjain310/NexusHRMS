@@ -16,12 +16,13 @@ export function canAccessRoute(userRole, allowedRoles) {
 
 export const PERMISSIONS = {
   manageEmployees: ["ADMIN"],
-  approveLeave: ["ADMIN", "SENIOR_MANAGER"] ,
-  managePayroll: ["ADMIN"] ,
-  viewTeamAnalytics: ["ADMIN", "SENIOR_MANAGER"] ,
-  manageRecruitment: ["ADMIN", "HR_RECRUITER"] ,
-  systemSettings: ["ADMIN"] ,
-} ;
+  approveLeave: ["ADMIN", "SENIOR_MANAGER"],
+  manageLeave: ["ADMIN", "SENIOR_MANAGER", "HR_RECRUITER"],
+  managePayroll: ["ADMIN"],
+  viewTeamAnalytics: ["ADMIN", "SENIOR_MANAGER"],
+  manageRecruitment: ["ADMIN", "HR_RECRUITER"],
+  systemSettings: ["ADMIN"],
+};
 
 export function hasPermission(userRole, permission) {
   return (PERMISSIONS[permission] ).includes(userRole);

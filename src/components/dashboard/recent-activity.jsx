@@ -6,24 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
-import { Megaphone, Pencil, Trash2 } from "lucide-react";
+import { CalendarDays, Megaphone, Pencil, Trash2 } from "lucide-react";
 import { AnnouncementFormDialog } from "./announcement-form-dialog";
 import { ManageAnnouncementAccessDialog } from "./manage-announcement-access-dialog";
 
-const ACTION_LABELS = {
-  leave_requested: "Leave request submitted",
-  leave_approved: "Leave approved",
-  leave_rejected: "Leave rejected",
-  leave_cancelled: "Leave cancelled",
-  attendance_correction_requested: "Attendance correction requested",
-  attendance_correction_approved: "Attendance correction approved",
-  attendance_correction_rejected: "Attendance correction rejected",
-  attendance_check_in: "Clocked in",
-  attendance_check_out: "Clocked out",
-  payroll_published: "Payslip published",
-};
-
-export function RecentActivity({ showApprovalsLink = false }) {
+export function RecentActivity() {
   const [items, setItems] = useState([]);
   const [meta, setMeta] = useState({});
   const [formOpen, setFormOpen] = useState(false);
@@ -49,17 +36,15 @@ export function RecentActivity({ showApprovalsLink = false }) {
     if (res.ok) load();
   }
 
-  const description = meta.isApprover
-    ? "Organization announcements and your team's leave & attendance updates"
-    : "Organization announcements and your personal leave & attendance updates";
-
   return (
     <>
       <Card>
         <CardHeader className="flex flex-row items-start justify-between space-y-0 gap-4">
           <div>
             <CardTitle>Recent activity</CardTitle>
-            <CardDescription>{description}</CardDescription>
+            <CardDescription>
+              Organization announcements and colleagues currently on approved leave
+            </CardDescription>
           </div>
           <div className="flex shrink-0 flex-wrap gap-2 justify-end">
             {meta.canPostAnnouncements && (
@@ -77,8 +62,8 @@ export function RecentActivity({ showApprovalsLink = false }) {
         <CardContent>
           {items.length === 0 ? (
             <p className="text-sm text-muted-foreground py-4 text-center">
-              Activity will appear here — organization announcements and your leave & attendance
-              updates.
+              Organization announcements will appear here. Leave request details are in your
+              notifications bell or the Leave Management dashboard (Admin/HR).
             </p>
           ) : (
             <ul className="space-y-3">
@@ -142,27 +127,26 @@ export function RecentActivity({ showApprovalsLink = false }) {
                     </div>
                   </li>
                 ) : (
-                  <li key={item.id} className="flex gap-3 text-sm border-b pb-3 last:border-0">
-                    <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                  <li
+                    key={item.id}
+                    className="flex gap-3 text-sm border-b pb-3 last:border-0"
+                  >
+                    <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium">
-                        {ACTION_LABELS[item.action] || item.action.replace(/_/g, " ")}
-                      </p>
-                      {item.metadata?.employeeName && (
-                        <p className="text-muted-foreground text-xs">{item.metadata.employeeName}</p>
-                      )}
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
-                      </p>
+                      <p className="font-medium">{item.title}</p>
+                      <p className="text-[10px] text-muted-foreground mt-1">On leave today</p>
                     </div>
                   </li>
                 )
               )}
             </ul>
           )}
-          {showApprovalsLink && (
-            <Link href="/approvals" className="text-xs text-primary hover:underline mt-4 inline-block">
-              Open approval inbox →
+          {meta.canManageLeave && (
+            <Link
+              href="/leave-management"
+              className="text-xs text-primary hover:underline mt-4 inline-block"
+            >
+              Open leave management →
             </Link>
           )}
         </CardContent>

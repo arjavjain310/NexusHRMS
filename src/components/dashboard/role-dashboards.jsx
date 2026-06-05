@@ -4,8 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { AttendanceAreaChart, PerformanceBarChart } from "./charts";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
-import { RecentActivity } from "./recent-activity";
-
 export function RoleDashboard({ role, data }) {
   return (
     <div className="space-y-8">
@@ -18,9 +16,6 @@ export function RoleDashboard({ role, data }) {
       ) : (
         <EmployeeDashboard data={data} />
       )}
-      <RecentActivity
-        showApprovalsLink={role === "ADMIN" || role === "SENIOR_MANAGER"}
-      />
     </div>
   );
 }

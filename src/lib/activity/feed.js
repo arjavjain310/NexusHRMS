@@ -1,38 +1,17 @@
 import { prisma } from "@/lib/prisma";
-import { hasPermission } from "@/lib/auth/permissions";
 import { canPostAnnouncements } from "@/lib/auth/announcements";
-import {
-  ORG_APPROVER_ACTIONS,
-  PERSONAL_ACTIVITY_ACTIONS,
-} from "@/lib/activity/constants";
+import { hasPermission } from "@/lib/auth/permissions";
+import { getOnLeaveStatusItems } from "@/lib/activity/on-leave";
 
 const now = () => new Date();
 
 export async function getRecentActivityFeed(session) {
-  const isApprover = hasPermission(session.role, "approveLeave");
-
   const announcementWhere = {
     organizationId: session.organizationId,
     OR: [{ expiresAt: null }, { expiresAt: { gt: now() } }],
   };
 
-  const activityWhere = isApprover
-    ? {
-        organizationId: session.organizationId,
-        OR: [
-          ...(session.employeeId
-            ? [{ employeeId: session.employeeId, action: { in: PERSONAL_ACTIVITY_ACTIONS } }]
-            : []),
-          { action: { in: ORG_APPROVER_ACTIONS } },
-        ],
-      }
-    : {
-        organizationId: session.organizationId,
-        employeeId: session.employeeId || "none",
-        action: { in: PERSONAL_ACTIVITY_ACTIONS },
-      };
-
-  const [announcements, activities] = await Promise.all([
+  const [announcements, onLeaveItems] = await Promise.all([
     prisma.announcement.findMany({
       where: announcementWhere,
       orderBy: { publishedAt: "desc" },
@@ -45,11 +24,7 @@ export async function getRecentActivityFeed(session) {
         },
       },
     }),
-    prisma.activityLog.findMany({
-      where: activityWhere,
-      orderBy: { createdAt: "desc" },
-      take: 12,
-    }),
+    getOnLeaveStatusItems(prisma, session.organizationId),
   ]);
 
   const sortedAnnouncements = [...announcements].sort((a, b) => {
@@ -75,20 +50,12 @@ export async function getRecentActivityFeed(session) {
       (a.authorId === session.id && canPostAnnouncements(session)),
   }));
 
-  const activityItems = activities.map((item) => ({
-    id: `activity-${item.id}`,
-    kind: "activity",
-    action: item.action,
-    metadata: item.metadata,
-    createdAt: item.createdAt.toISOString(),
-  }));
-
   return {
-    items: [...announcementItems, ...activityItems].slice(0, 15),
+    items: [...announcementItems, ...onLeaveItems].slice(0, 15),
     meta: {
       canPostAnnouncements: canPostAnnouncements(session),
       canManageAnnouncementAccess: session.role === "ADMIN",
-      isApprover,
+      canManageLeave: hasPermission(session.role, "manageLeave"),
     },
   };
 }

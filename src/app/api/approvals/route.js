@@ -100,17 +100,6 @@ export async function PATCH(request) {
         });
       }
 
-      await logActivity(session.organizationId, {
-        userId: session.id,
-        employeeId: leave.employeeId,
-        action: `leave_${status.toLowerCase()}`,
-        entity: "LeaveRequest",
-        entityId: leave.id,
-        metadata: {
-          employeeName: `${leave.employee.firstName} ${leave.employee.lastName}`,
-        },
-      });
-
       return NextResponse.json({ success: true, data: leave });
     }
 

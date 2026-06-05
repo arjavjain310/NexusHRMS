@@ -2,11 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/auth/permissions";
-import {
-  createNotification,
-  logActivity,
-  notifyApprovers,
-} from "@/lib/notifications";
+import { createNotification, notifyApprovers } from "@/lib/notifications";
 
 export async function GET() {
   const session = await getSession();
@@ -15,8 +11,10 @@ export async function GET() {
   }
 
   try {
+    const canViewOrgLeaves =
+      hasPermission(session.role, "manageLeave") || hasPermission(session.role, "approveLeave");
     const leaves = await prisma.leaveRequest.findMany({
-      where: hasPermission(session.role, "approveLeave")
+      where: canViewOrgLeaves
         ? { employee: { organizationId: session.organizationId } }
         : { employeeId: session.employeeId || "none" },
       include: {
@@ -61,18 +59,6 @@ export async function POST(request) {
       href: "/approvals",
     });
 
-    await logActivity(session.organizationId, {
-      userId: session.id,
-      employeeId: session.employeeId,
-      action: "leave_requested",
-      entity: "LeaveRequest",
-      entityId: leave.id,
-      metadata: {
-        type: body.type,
-        employeeName: `${leave.employee.firstName} ${leave.employee.lastName}`,
-      },
-    });
-
     return NextResponse.json({ success: true, data: leave });
   } catch (e) {
     console.error("[leave POST]", e);
@@ -111,17 +97,6 @@ export async function PATCH(request) {
         href: "/leave",
       });
     }
-
-    await logActivity(session.organizationId, {
-      userId: session.id,
-      employeeId: leave.employeeId,
-      action: `leave_${status.toLowerCase()}`,
-      entity: "LeaveRequest",
-      entityId: leave.id,
-      metadata: {
-        employeeName: `${leave.employee.firstName} ${leave.employee.lastName}`,
-      },
-    });
 
     return NextResponse.json({ success: true, data: leave });
   } catch (e) {

@@ -33,7 +33,7 @@ export async function middleware(request) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
   if (!isPublic && !isAuthenticated && !pathname.startsWith("/login") && pathname !== "/") {
-    const protectedPrefixes = ["/employees", "/attendance", "/leave", "/payroll", "/performance", "/recruitment", "/ai-assistant", "/holidays", "/settings"];
+    const protectedPrefixes = ["/employees", "/attendance", "/leave", "/leave-management", "/payroll", "/performance", "/recruitment", "/ai-assistant", "/holidays", "/settings"];
     if (protectedPrefixes.some(p => pathname.startsWith(p))) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
