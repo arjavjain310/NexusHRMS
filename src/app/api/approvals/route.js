@@ -25,7 +25,6 @@ export async function GET() {
         where: {
           status: "PENDING",
           employee: { organizationId: session.organizationId },
-          ...(session.employeeId ? { employeeId: { not: session.employeeId } } : {}),
         },
         include: {
           employee: {

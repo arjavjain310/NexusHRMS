@@ -15,7 +15,7 @@ import { formatDate } from "@/lib/utils";
 import { Plus, Check, X } from "lucide-react";
 import { differenceInCalendarDays } from "date-fns";
 
-export function LeaveClient({ canApprove = false, currentEmployeeId }) {
+export function LeaveClient({ canApprove = false }) {
   const [leaves, setLeaves] = useState([]);
   const [balances, setBalances] = useState([]);
   const [eligibleTypes, setEligibleTypes] = useState([]);
@@ -240,9 +240,7 @@ export function LeaveClient({ canApprove = false, currentEmployeeId }) {
                   >
                     {l.status}
                   </Badge>
-                  {canApprove &&
-                    l.status === "PENDING" &&
-                    l.employeeId !== currentEmployeeId && (
+                  {canApprove && l.status === "PENDING" && (
                     <>
                       <Button
                         size="sm"

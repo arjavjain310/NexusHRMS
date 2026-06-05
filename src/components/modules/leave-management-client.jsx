@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LEAVE_TYPE_LABELS } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
+import { Check, X } from "lucide-react";
 
 const STATUS_TABS = [
   { key: "ALL", label: "All requests" },
@@ -45,6 +46,15 @@ export function LeaveManagementClient({ canApprove = false }) {
   useEffect(() => {
     load();
   }, [load]);
+
+  async function updateStatus(id, status) {
+    await fetch("/api/leave", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status }),
+    });
+    load();
+  }
 
   return (
     <div className="space-y-6">
@@ -107,7 +117,8 @@ export function LeaveManagementClient({ canApprove = false }) {
                     <th className="pb-3 pr-4 font-medium">Type</th>
                     <th className="pb-3 pr-4 font-medium">Dates</th>
                     <th className="pb-3 pr-4 font-medium">Status</th>
-                    <th className="pb-3 font-medium">Reason</th>
+                    <th className="pb-3 pr-4 font-medium">Reason</th>
+                    {canApprove && <th className="pb-3 font-medium">Actions</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -129,9 +140,37 @@ export function LeaveManagementClient({ canApprove = false }) {
                       <td className="py-3 pr-4">
                         <Badge variant={STATUS_VARIANT[l.status] || "outline"}>{l.status}</Badge>
                       </td>
-                      <td className="py-3 text-muted-foreground max-w-xs truncate">
+                      <td className="py-3 pr-4 text-muted-foreground max-w-xs truncate">
                         {l.reason || "—"}
                       </td>
+                      {canApprove && (
+                        <td className="py-3">
+                          {l.status === "PENDING" ? (
+                            <div className="flex gap-1">
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={() => updateStatus(l.id, "APPROVED")}
+                                aria-label="Approve"
+                              >
+                                <Check className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={() => updateStatus(l.id, "REJECTED")}
+                                aria-label="Reject"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
