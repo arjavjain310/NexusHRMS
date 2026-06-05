@@ -464,6 +464,11 @@ async function main() {
         content: "Office remains open; attendance is mandatory unless on approved leave.",
         priority: "normal",
       },
+      {
+        title: "Office will remain closed on Friday",
+        content: "The office will be closed this Friday for maintenance. Work from home if required.",
+        priority: "high",
+      },
     ];
     for (const s of samples) {
       await prisma.announcement.create({

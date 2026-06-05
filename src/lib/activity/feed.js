@@ -1,7 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { hasPermission } from "@/lib/auth/permissions";
 import { canPostAnnouncements } from "@/lib/auth/announcements";
-import { APPROVER_VISIBLE_ACTIONS } from "@/lib/activity/constants";
+import {
+  ORG_APPROVER_ACTIONS,
+  PERSONAL_ACTIVITY_ACTIONS,
+} from "@/lib/activity/constants";
 
 const now = () => new Date();
 
@@ -17,14 +20,16 @@ export async function getRecentActivityFeed(session) {
     ? {
         organizationId: session.organizationId,
         OR: [
-          ...(session.employeeId ? [{ employeeId: session.employeeId }] : []),
-          { action: { in: APPROVER_VISIBLE_ACTIONS } },
+          ...(session.employeeId
+            ? [{ employeeId: session.employeeId, action: { in: PERSONAL_ACTIVITY_ACTIONS } }]
+            : []),
+          { action: { in: ORG_APPROVER_ACTIONS } },
         ],
       }
     : {
         organizationId: session.organizationId,
         employeeId: session.employeeId || "none",
-        action: { in: APPROVER_VISIBLE_ACTIONS.concat(["payroll_published"]) },
+        action: { in: PERSONAL_ACTIVITY_ACTIONS },
       };
 
   const [announcements, activities] = await Promise.all([
@@ -65,7 +70,9 @@ export async function getRecentActivityFeed(session) {
       : "Admin",
     createdAt: a.publishedAt.toISOString(),
     announcementId: a.id,
-    canEdit: session.role === "ADMIN" || a.authorId === session.id,
+    canEdit:
+      session.role === "ADMIN" ||
+      (a.authorId === session.id && canPostAnnouncements(session)),
   }));
 
   const activityItems = activities.map((item) => ({
