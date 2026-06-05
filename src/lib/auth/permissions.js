@@ -21,7 +21,6 @@ export const PERMISSIONS = {
   managePayroll: ["ADMIN"],
   viewTeamAnalytics: ["ADMIN", "SENIOR_MANAGER"],
   manageRecruitment: ["ADMIN", "HR_RECRUITER"],
-  systemSettings: ["ADMIN"],
 };
 
 export function hasPermission(userRole, permission) {

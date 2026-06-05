@@ -10,7 +10,6 @@ import {
   Bot,
   Mic,
   PartyPopper,
-  Settings,
   User,
   ClipboardCheck,
   CalendarRange,
@@ -29,7 +28,6 @@ const ICON_MAP = {
   Bot,
   Mic,
   PartyPopper,
-  Settings,
   ClipboardCheck,
   CalendarRange,
 };

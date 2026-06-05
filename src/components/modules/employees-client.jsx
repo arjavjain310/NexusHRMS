@@ -8,12 +8,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AddEmployeeForm } from "@/components/employees/add-employee-form";
+import { EditEmployeeDialog } from "@/components/employees/edit-employee-dialog";
 import { EmployeeMoreOptions } from "@/components/employees/employee-more-options";
 import { RemoveEmployeeDialog } from "@/components/employees/remove-employee-dialog";
 import { ManageEmployeeAccessDialog } from "@/components/employees/manage-employee-access-dialog";
 import { GENDER_LABELS, ROLE_LABELS } from "@/lib/constants";
 import { getInitials } from "@/lib/utils";
-import { Search, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, ChevronRight, Pencil } from "lucide-react";
 
 export function EmployeesClient({ canManage = false, isAdmin = false }) {
   const [employees, setEmployees] = useState([]);
@@ -22,6 +24,7 @@ export function EmployeesClient({ canManage = false, isAdmin = false }) {
   const [showAdd, setShowAdd] = useState(false);
   const [showRemove, setShowRemove] = useState(false);
   const [showAccess, setShowAccess] = useState(false);
+  const [editing, setEditing] = useState(null);
 
   const fetchEmployees = useCallback(async () => {
     setLoading(true);
@@ -70,6 +73,14 @@ export function EmployeesClient({ canManage = false, isAdmin = false }) {
 
       <ManageEmployeeAccessDialog open={showAccess} onClose={() => setShowAccess(false)} />
 
+      <EditEmployeeDialog
+        open={!!editing}
+        employee={editing}
+        canManage={canManage}
+        onClose={() => setEditing(null)}
+        onSaved={() => fetchEmployees()}
+      />
+
       <div className="mb-6 relative max-w-md">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -106,10 +117,10 @@ export function EmployeesClient({ canManage = false, isAdmin = false }) {
               </Card>
             )
             : employees.map((emp) => (
-                <Link key={emp.id} href={`/employees/${emp.id}`}>
-                  <Card className="hover:shadow-soft transition-shadow">
-                    <CardContent className="p-4 flex items-center gap-4">
-                      <Avatar className="h-12 w-12">
+                <Card key={emp.id} className="hover:shadow-soft transition-shadow">
+                  <CardContent className="p-4 flex items-center gap-4">
+                    <Link href={`/employees/${emp.id}`} className="flex flex-1 items-center gap-4 min-w-0">
+                      <Avatar className="h-12 w-12 shrink-0">
                         <AvatarFallback className="bg-primary/10 text-primary">
                           {getInitials(emp.firstName, emp.lastName)}
                         </AvatarFallback>
@@ -141,9 +152,21 @@ export function EmployeesClient({ canManage = false, isAdmin = false }) {
                         </div>
                       </div>
                       <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
-                    </CardContent>
-                  </Card>
-                </Link>
+                    </Link>
+                    {canManage && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0"
+                        aria-label={`Edit ${emp.firstName} ${emp.lastName}`}
+                        onClick={() => setEditing(emp)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
               ))}
       </div>
     </div>

@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
-import { canManageEmployees } from "@/lib/auth/employee-management";
+import {
+  canManageEmployees,
+  canModifyEmployeeRecord,
+  getEditableEmployeeFields,
+} from "@/lib/auth/employee-management";
 import { parseGender } from "@/lib/leave-eligibility";
 import { purgeEmployeeCompletely } from "@/lib/employees/purge";
 import { getAttendanceDayRange, serializeAttendanceRecord } from "@/lib/attendance";
@@ -116,33 +120,29 @@ export async function PATCH(request, {
   } = await params;
   const body = await request.json();
   const isSelf = session.employeeId === id;
-  if (!isSelf && !canManageEmployees(session)) {
-    return NextResponse.json({
-      error: "Forbidden"
-    }, {
-      status: 403
-    });
+  const canManage = canManageEmployees(session);
+
+  if (!canModifyEmployeeRecord(session, id)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
-  const allowedSelf = ["phone", "address", "city", "bio", "education"];
-  const allowedAdmin = [
-    ...allowedSelf,
-    "firstName",
-    "lastName",
-    "gender",
-    "departmentId",
-    "designationId",
-    "managerId",
-    "status",
-    "panNumber",
-    "uan",
-    "pfNumber",
-    "paymentMode",
-    "businessUnit",
-    "subDepartment",
-  ];
-  const keys = isSelf ? allowedSelf : allowedAdmin;
+
+  const allowedKeys = getEditableEmployeeFields(session, id);
+  const disallowedKeys = Object.keys(body).filter(
+    (key) => key !== "role" && !allowedKeys.includes(key)
+  );
+  if (disallowedKeys.length > 0) {
+    return NextResponse.json(
+      {
+        error: isSelf
+          ? "You can only update your own contact info, summary, and education."
+          : "Only administrators or users with employee-management access can modify employee records.",
+      },
+      { status: 403 }
+    );
+  }
+
   const data = {};
-  for (const key of keys) {
+  for (const key of allowedKeys) {
     if (key in body) data[key] = body[key];
   }
   if ("gender" in data) {
@@ -155,18 +155,62 @@ export async function PATCH(request, {
     }
     data.gender = gender;
   }
+
+  const VALID_ROLES = ["ADMIN", "SENIOR_MANAGER", "HR_RECRUITER", "EMPLOYEE"];
+  const roleUpdate = body.role && VALID_ROLES.includes(body.role) ? body.role : null;
+
+  if (roleUpdate) {
+    if (isSelf || !canManage) {
+      return NextResponse.json(
+        { error: "Only administrators or users with employee-management access can change roles." },
+        { status: 403 }
+      );
+    }
+  }
+
   try {
+    const existing = await prisma.employee.findFirst({
+      where: { id, organizationId: session.organizationId },
+      include: { user: { select: { id: true, role: true } } },
+    });
+    if (!existing) {
+      return NextResponse.json({ error: "Employee not found" }, { status: 404 });
+    }
+
+    if (roleUpdate && !isSelf && canManage && existing.userId) {
+      if (roleUpdate === "ADMIN" && session.role !== "ADMIN") {
+        return NextResponse.json(
+          { error: "Only administrators can assign the admin role." },
+          { status: 403 }
+        );
+      }
+      if (existing.user?.role === "ADMIN" && roleUpdate !== "ADMIN") {
+        const adminCount = await prisma.user.count({
+          where: { organizationId: session.organizationId, role: "ADMIN" },
+        });
+        if (adminCount <= 1) {
+          return NextResponse.json(
+            { error: "Cannot change role of the only admin in the organization." },
+            { status: 400 }
+          );
+        }
+      }
+      await prisma.user.update({
+        where: { id: existing.userId },
+        data: { role: roleUpdate },
+      });
+    }
+
     const employee = await prisma.employee.update({
-      where: {
-        id
-      },
+      where: { id },
       data,
       include: {
         department: true,
         designation: true,
         manager: { select: { id: true, firstName: true, lastName: true } },
         organization: { select: { name: true } },
-      }
+        user: { select: { role: true } },
+      },
     });
     return NextResponse.json({
       success: true,

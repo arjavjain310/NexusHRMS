@@ -50,7 +50,6 @@ export const NAV_ITEMS = [
   { title: "AI Assistant", href: "/ai-assistant", icon: "Bot" },
   { title: "Voice Interview", href: "/recruitment/voice-interview", icon: "Mic", roles: ["ADMIN", "HR_RECRUITER", "EMPLOYEE"] },
   { title: "Holidays", href: "/holidays", icon: "PartyPopper" },
-  { title: "Settings", href: "/settings", icon: "Settings", roles: ["ADMIN"] },
 ];
 
 export const LEAVE_TYPE_LABELS = {
