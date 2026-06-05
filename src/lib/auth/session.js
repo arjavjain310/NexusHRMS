@@ -41,6 +41,8 @@ export async function getSession() {
       employeeId: dbUser.employee?.id,
       canManageEmployees: dbUser.canManageEmployees,
       canPostAnnouncements: dbUser.canPostAnnouncements,
+      canApproveLeave: dbUser.canApproveLeave,
+      firstName: dbUser.employee?.firstName,
       name: dbUser.employee ? `${dbUser.employee.firstName} ${dbUser.employee.lastName}` : undefined,
       avatarUrl: dbUser.employee?.avatarUrl ?? undefined
     };
@@ -82,6 +84,8 @@ async function getDemoSession() {
           employeeId: dbUser.employee?.id,
           canManageEmployees: dbUser.canManageEmployees,
           canPostAnnouncements: dbUser.canPostAnnouncements,
+          canApproveLeave: dbUser.canApproveLeave,
+          firstName: dbUser.employee?.firstName,
           name: dbUser.employee ? `${dbUser.employee.firstName} ${dbUser.employee.lastName}` : undefined,
           avatarUrl: dbUser.employee?.avatarUrl ?? undefined
         };

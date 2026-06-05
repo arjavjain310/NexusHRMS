@@ -15,9 +15,11 @@ import { formatDate } from "@/lib/utils";
 import { Plus, Check, X } from "lucide-react";
 import { differenceInCalendarDays } from "date-fns";
 
-export function LeaveClient({ canApprove = false }) {
+export function LeaveClient({ canApprove = false, currentEmployeeId }) {
   const [leaves, setLeaves] = useState([]);
   const [balances, setBalances] = useState([]);
+  const [eligibleTypes, setEligibleTypes] = useState([]);
+  const [genderRequired, setGenderRequired] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
     type: "ANNUAL",
@@ -30,7 +32,16 @@ export function LeaveClient({ canApprove = false }) {
     fetch("/api/leave").then((r) => r.json()).then((j) => setLeaves(j.data || []));
     fetch("/api/leave/balance")
       .then((r) => r.json())
-      .then((j) => setBalances(j.data || []));
+      .then((j) => {
+        setBalances(j.data || []);
+        const types = j.meta?.eligibleTypes || [];
+        setEligibleTypes(types);
+        setGenderRequired(!!j.meta?.genderRequired);
+        setForm((prev) => ({
+          ...prev,
+          type: types.includes(prev.type) ? prev.type : types[0] || "ANNUAL",
+        }));
+      });
   }
 
   useEffect(() => {
@@ -86,6 +97,13 @@ export function LeaveClient({ canApprove = false }) {
 
       <ModuleSubNav items={ME_MODULE_TABS} />
 
+      {genderRequired && (
+        <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+          Your gender is not set on your employee profile. Maternity and paternity leave are
+          unavailable until Admin or HR updates your record.
+        </p>
+      )}
+
       {balances.length > 0 && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {balances
@@ -124,9 +142,12 @@ export function LeaveClient({ canApprove = false }) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(LEAVE_TYPE_LABELS).map(([k, v]) => (
+                    {(eligibleTypes.length > 0
+                      ? eligibleTypes
+                      : Object.keys(LEAVE_TYPE_LABELS)
+                    ).map((k) => (
                       <SelectItem key={k} value={k}>
-                        {v}
+                        {LEAVE_TYPE_LABELS[k] || k}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -219,7 +240,9 @@ export function LeaveClient({ canApprove = false }) {
                   >
                     {l.status}
                   </Badge>
-                  {canApprove && l.status === "PENDING" && (
+                  {canApprove &&
+                    l.status === "PENDING" &&
+                    l.employeeId !== currentEmployeeId && (
                     <>
                       <Button
                         size="sm"

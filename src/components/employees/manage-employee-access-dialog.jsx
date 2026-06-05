@@ -30,6 +30,19 @@ export function ManageEmployeeAccessDialog({ open, onClose }) {
 
   if (!open) return null;
 
+  async function revokeAllDelegated() {
+    if (!confirm("Remove employee add/remove access from everyone except administrators?")) return;
+    setMessage("");
+    const res = await fetch("/api/employees/access", { method: "POST" });
+    const json = await res.json();
+    if (!res.ok) {
+      setMessage(json.error || "Failed to revoke access");
+      return;
+    }
+    setMessage(json.message || "Access revoked");
+    load();
+  }
+
   async function toggleAccess(user) {
     if (user.role === "ADMIN") return;
     setSavingId(user.id);
@@ -66,6 +79,9 @@ export function ManageEmployeeAccessDialog({ open, onClose }) {
           </Button>
         </CardHeader>
         <CardContent className="overflow-y-auto space-y-3 flex-1">
+          <Button type="button" variant="outline" size="sm" onClick={revokeAllDelegated}>
+            Revoke all delegated access
+          </Button>
           {message && <p className="text-sm text-primary">{message}</p>}
           {loading ? (
             <div className="flex justify-center py-8">

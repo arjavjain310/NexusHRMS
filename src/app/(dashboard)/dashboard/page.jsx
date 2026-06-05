@@ -16,13 +16,16 @@ export default async function DashboardPage() {
   } catch (e) {
     data = getMockDashboardData(session.role);
   }
-  const firstName =
-    session.name?.split(" ")[0] || session.email?.split("@")[0] || "there";
+  const employeeName =
+    session.firstName ||
+    session.name?.split(" ")[0] ||
+    session.email?.split("@")[0] ||
+    "there";
 
   return (
     <div>
       <PageHeader
-        title={`Hi, ${firstName}`}
+        title={`Hi, ${employeeName}`}
         description={`${ROLE_LABELS[session.role]} dashboard — overview of your HR workspace`}
       />
       <RoleDashboard role={session.role} data={data} />

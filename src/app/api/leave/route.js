@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
-import { hasPermission } from "@/lib/auth/permissions";
-import { createNotification, notifyApprovers } from "@/lib/notifications";
+import { canApproveLeave, canApproveLeaveRequest } from "@/lib/auth/leave-approval";
+import { createNotification, notifyLeaveApprovers } from "@/lib/notifications";
+import { validateLeaveTypeForGender } from "@/lib/leave-eligibility";
 
 export async function GET() {
   const session = await getSession();
@@ -11,12 +12,8 @@ export async function GET() {
   }
 
   try {
-    const canViewOrgLeaves =
-      hasPermission(session.role, "manageLeave") || hasPermission(session.role, "approveLeave");
     const leaves = await prisma.leaveRequest.findMany({
-      where: canViewOrgLeaves
-        ? { employee: { organizationId: session.organizationId } }
-        : { employeeId: session.employeeId || "none" },
+      where: { employeeId: session.employeeId || "none" },
       include: {
         employee: {
           select: { firstName: true, lastName: true, employeeCode: true },
@@ -38,6 +35,20 @@ export async function POST(request) {
   }
 
   const body = await request.json();
+
+  const employee = await prisma.employee.findUnique({
+    where: { id: session.employeeId },
+    select: { gender: true, firstName: true, lastName: true },
+  });
+  if (!employee) {
+    return NextResponse.json({ error: "Employee profile not found" }, { status: 404 });
+  }
+
+  const eligibility = validateLeaveTypeForGender(employee.gender, body.type);
+  if (!eligibility.ok) {
+    return NextResponse.json({ error: eligibility.error }, { status: 400 });
+  }
+
   try {
     const leave = await prisma.leaveRequest.create({
       data: {
@@ -52,10 +63,10 @@ export async function POST(request) {
       },
     });
 
-    await notifyApprovers(session.organizationId, {
+    await notifyLeaveApprovers(session.organizationId, {
       type: "LEAVE_PENDING",
       title: "New leave request",
-      message: `${leave.employee.firstName} ${leave.employee.lastName} requested ${body.type} leave.`,
+      message: `${employee.firstName} ${employee.lastName} requested ${body.type} leave.`,
       href: "/approvals",
     });
 
@@ -68,12 +79,22 @@ export async function POST(request) {
 
 export async function PATCH(request) {
   const session = await getSession();
-  if (!session || !hasPermission(session.role, "approveLeave")) {
+  if (!session || !canApproveLeave(session)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const { id, status, rejectReason } = await request.json();
   try {
+    const existing = await prisma.leaveRequest.findFirst({
+      where: {
+        id,
+        employee: { organizationId: session.organizationId },
+      },
+    });
+    if (!existing || !canApproveLeaveRequest(session, existing.employeeId)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const leave = await prisma.leaveRequest.update({
       where: { id },
       data: {

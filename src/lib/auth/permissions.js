@@ -16,7 +16,7 @@ export function canAccessRoute(userRole, allowedRoles) {
 
 export const PERMISSIONS = {
   manageEmployees: ["ADMIN"],
-  approveLeave: ["ADMIN", "SENIOR_MANAGER"],
+  approveLeave: ["ADMIN"],
   manageLeave: ["ADMIN", "SENIOR_MANAGER", "HR_RECRUITER"],
   managePayroll: ["ADMIN"],
   viewTeamAnalytics: ["ADMIN", "SENIOR_MANAGER"],

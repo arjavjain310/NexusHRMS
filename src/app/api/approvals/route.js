@@ -2,18 +2,47 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/auth/permissions";
-import { createNotification, logActivity, notifyApprovers } from "@/lib/notifications";
+import { canApproveLeave, canApproveLeaveRequest } from "@/lib/auth/leave-approval";
+import { createNotification, logActivity } from "@/lib/notifications";
 import { getAttendanceDayRange } from "@/lib/attendance";
 
 export async function GET() {
   const session = await getSession();
-  if (!session || !hasPermission(session.role, "approveLeave")) {
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const canReviewLeave = canApproveLeave(session);
+  const canReviewAttendance = hasPermission(session.role, "approveLeave") || session.role === "SENIOR_MANAGER";
+  if (!canReviewLeave && !canReviewAttendance) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   try {
     const [leaves, corrections] = await Promise.all([
-      prisma.leaveRequest.findMany({
+      canReviewLeave
+        ? prisma.leaveRequest.findMany({
+        where: {
+          status: "PENDING",
+          employee: { organizationId: session.organizationId },
+          ...(session.employeeId ? { employeeId: { not: session.employeeId } } : {}),
+        },
+        include: {
+          employee: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              employeeCode: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 50,
+      })
+        : Promise.resolve([]),
+      canReviewAttendance
+        ? prisma.attendanceCorrection.findMany({
         where: {
           status: "PENDING",
           employee: { organizationId: session.organizationId },
@@ -30,25 +59,8 @@ export async function GET() {
         },
         orderBy: { createdAt: "desc" },
         take: 50,
-      }),
-      prisma.attendanceCorrection.findMany({
-        where: {
-          status: "PENDING",
-          employee: { organizationId: session.organizationId },
-        },
-        include: {
-          employee: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              employeeCode: true,
-            },
-          },
-        },
-        orderBy: { createdAt: "desc" },
-        take: 50,
-      }),
+      })
+        : Promise.resolve([]),
     ]);
 
     return NextResponse.json({
@@ -66,8 +78,8 @@ export async function GET() {
 
 export async function PATCH(request) {
   const session = await getSession();
-  if (!session || !hasPermission(session.role, "approveLeave")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const body = await request.json();
@@ -75,6 +87,20 @@ export async function PATCH(request) {
 
   try {
     if (kind === "leave") {
+      if (!canApproveLeave(session)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+
+      const existing = await prisma.leaveRequest.findFirst({
+        where: {
+          id,
+          employee: { organizationId: session.organizationId },
+        },
+      });
+      if (!existing || !canApproveLeaveRequest(session, existing.employeeId)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+
       const leave = await prisma.leaveRequest.update({
         where: { id },
         data: {
@@ -104,6 +130,10 @@ export async function PATCH(request) {
     }
 
     if (kind === "attendance") {
+      if (!hasPermission(session.role, "approveLeave") && session.role !== "SENIOR_MANAGER") {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+
       const correction = await prisma.attendanceCorrection.update({
         where: { id },
         data: {

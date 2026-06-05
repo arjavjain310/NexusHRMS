@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
-import { isOrgAdmin } from "@/lib/auth/employee-management";
+import { canGrantEmployeeManagementAccess, isOrgAdmin } from "@/lib/auth/employee-management";
 
 /** Admin: list who can add/remove employees; grant or revoke access */
 export async function GET() {
   const session = await getSession();
-  if (!session || !isOrgAdmin(session.role)) {
+  if (!session || !canGrantEmployeeManagementAccess(session)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -41,9 +41,40 @@ export async function GET() {
   }
 }
 
+/** Admin: revoke employee-management access from all non-admin users */
+export async function POST() {
+  const session = await getSession();
+  if (!session || !canGrantEmployeeManagementAccess(session)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  try {
+    const result = await prisma.user.updateMany({
+      where: {
+        organizationId: session.organizationId,
+        role: { not: "ADMIN" },
+        canManageEmployees: true,
+      },
+      data: { canManageEmployees: false },
+    });
+
+    return NextResponse.json({
+      success: true,
+      revokedCount: result.count,
+      message:
+        result.count > 0
+          ? `Removed employee management access from ${result.count} user(s). Only administrators can add or remove employees unless you grant access again.`
+          : "No delegated employee management access was active.",
+    });
+  } catch (e) {
+    console.error("[employees access POST]", e);
+    return NextResponse.json({ error: "Failed to revoke access" }, { status: 500 });
+  }
+}
+
 export async function PATCH(request) {
   const session = await getSession();
-  if (!session || !isOrgAdmin(session.role)) {
+  if (!session || !canGrantEmployeeManagementAccess(session)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

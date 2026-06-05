@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ROLE_LABELS } from "@/lib/constants";
+import { GENDER_LABELS, GENDER_OPTIONS, ROLE_LABELS } from "@/lib/constants";
 import { Loader2, X } from "lucide-react";
 
 const ROLES = ["EMPLOYEE", "HR_RECRUITER", "SENIOR_MANAGER", "ADMIN"];
@@ -18,6 +18,7 @@ const emptyForm = () => ({
   email: "",
   phone: "",
   employeeCode: "",
+  gender: "",
   role: "EMPLOYEE",
   departmentId: "",
   designationId: "",
@@ -73,6 +74,14 @@ export function AddEmployeeForm({ open, onClose, onCreated }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (!meta?.canManageEmployees) {
+      setError("You do not have permission to add employees.");
+      return;
+    }
+    if (!form.gender) {
+      setError("Gender is required.");
+      return;
+    }
     setLoading(true);
     setError(null);
     setSuccess(null);
@@ -175,6 +184,25 @@ export function AddEmployeeForm({ open, onClose, onCreated }) {
                   value={form.employeeCode}
                   onChange={(e) => updateField("employeeCode", e.target.value)}
                 />
+              </div>
+              <div className="space-y-2 relative z-10">
+                <Label>Gender *</Label>
+                <Select
+                  value={form.gender}
+                  onValueChange={(v) => updateField("gender", v)}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background">
+                    {GENDER_OPTIONS.map((g) => (
+                      <SelectItem key={g} value={g}>
+                        {GENDER_LABELS[g]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2 relative z-10">
                 <Label>System role *</Label>

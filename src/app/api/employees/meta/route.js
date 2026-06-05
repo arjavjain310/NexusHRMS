@@ -10,6 +10,8 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const allowed = canManageEmployees(session);
+
   try {
     const [departments, designations, managers, codeRows] = await Promise.all([
       prisma.department.findMany({
@@ -48,11 +50,11 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       data: {
-        departments,
-        designations,
-        managers,
-        suggestedCode,
-        canManageEmployees: canManageEmployees(session),
+        departments: allowed ? departments : [],
+        designations: allowed ? designations : [],
+        managers: allowed ? managers : [],
+        suggestedCode: allowed ? suggestedCode : null,
+        canManageEmployees: allowed,
         isAdmin: isOrgAdmin(session.role),
       },
     });

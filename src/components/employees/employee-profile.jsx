@@ -10,6 +10,8 @@ import { getInitials, formatDate } from "@/lib/utils";
 import { Mail, Phone, MapPin, Hash, Building2, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BioEditor, EducationEditor } from "@/components/employees/profile-section-editor";
+import { GenderFieldEditor } from "@/components/employees/gender-field-editor";
+import { GENDER_LABELS } from "@/lib/constants";
 const STATUS_LABELS = {
   NOT_IN_YET: {
     label: "NOT IN YET",
@@ -30,12 +32,17 @@ export function EmployeeProfile({
   const [employee, setEmployee] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
+  const [canManage, setCanManage] = useState(false);
 
   useEffect(() => {
     fetch("/api/me")
       .then((r) => r.json())
       .then((j) => setIsOwner(j.data?.id === employeeId))
       .catch(() => setIsOwner(false));
+    fetch("/api/employees/meta")
+      .then((r) => r.json())
+      .then((j) => setCanManage(!!j.data?.canManageEmployees))
+      .catch(() => setCanManage(false));
   }, [employeeId]);
 
   useEffect(() => {
@@ -137,6 +144,11 @@ export function EmployeeProfile({
               <span className="flex items-center gap-1.5">
                 <Hash className="h-4 w-4" /> {employee.employeeCode}
               </span>
+              {employee.gender && (
+                <span className="flex items-center gap-1.5">
+                  {GENDER_LABELS[employee.gender] || employee.gender}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -271,6 +283,16 @@ export function EmployeeProfile({
           <TabsContent value="job">
             <Card>
               <CardContent className="p-6 grid sm:grid-cols-2 gap-6 text-sm">
+                <div className="sm:col-span-2">
+                  <GenderFieldEditor
+                    employeeId={employee.id}
+                    initialGender={employee.gender}
+                    canEdit={canManage}
+                    onSaved={(data) =>
+                      setEmployee((prev) => ({ ...prev, gender: data.gender }))
+                    }
+                  />
+                </div>
                 <div>
                   <p className="text-muted-foreground">Date Joined</p>
                   <p className="font-medium">

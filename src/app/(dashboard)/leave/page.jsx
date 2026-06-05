@@ -1,9 +1,13 @@
 import { LeaveClient } from "@/components/modules/leave-client";
 import { getSession } from "@/lib/auth/session";
-import { hasPermission } from "@/lib/auth/permissions";
+import { canApproveLeave } from "@/lib/auth/leave-approval";
 
 export default async function LeavePage() {
   const session = await getSession();
-  const canApprove = session ? hasPermission(session.role, "approveLeave") : false;
-  return <LeaveClient canApprove={canApprove} />;
+  return (
+    <LeaveClient
+      canApprove={session ? canApproveLeave(session) : false}
+      currentEmployeeId={session?.employeeId}
+    />
+  );
 }

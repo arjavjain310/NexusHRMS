@@ -42,7 +42,7 @@ export const NAV_ITEMS = [
   { title: "Attendance", href: "/attendance", icon: "Clock" },
   { title: "Leave", href: "/leave", icon: "CalendarDays" },
   { title: "Leave Management", href: "/leave-management", icon: "CalendarRange", roles: ["ADMIN", "SENIOR_MANAGER", "HR_RECRUITER"] },
-  { title: "Approvals", href: "/approvals", icon: "ClipboardCheck", roles: ["ADMIN", "SENIOR_MANAGER"] },
+  { title: "Approvals", href: "/approvals", icon: "ClipboardCheck", roles: ["ADMIN"] },
   { title: "Payroll", href: "/payroll", icon: "Wallet", roles: ["ADMIN", "SENIOR_MANAGER", "EMPLOYEE"] },
   { title: "Performance", href: "/performance", icon: "TrendingUp" },
   { title: "Recruitment", href: "/recruitment", icon: "Briefcase", roles: ["ADMIN", "HR_RECRUITER", "SENIOR_MANAGER"] },
@@ -61,3 +61,11 @@ export const LEAVE_TYPE_LABELS = {
   PATERNITY: "Paternity Leave",
   UNPAID: "Unpaid Leave",
 };
+
+export const GENDER_LABELS = {
+  MALE: "Male",
+  FEMALE: "Female",
+  OTHER: "Other",
+};
+
+export const GENDER_OPTIONS = ["MALE", "FEMALE", "OTHER"];

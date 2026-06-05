@@ -11,19 +11,17 @@ import { AddEmployeeForm } from "@/components/employees/add-employee-form";
 import { EmployeeMoreOptions } from "@/components/employees/employee-more-options";
 import { RemoveEmployeeDialog } from "@/components/employees/remove-employee-dialog";
 import { ManageEmployeeAccessDialog } from "@/components/employees/manage-employee-access-dialog";
-import { ROLE_LABELS } from "@/lib/constants";
+import { GENDER_LABELS, ROLE_LABELS } from "@/lib/constants";
 import { getInitials } from "@/lib/utils";
 import { Search, ChevronRight } from "lucide-react";
 
-export function EmployeesClient() {
+export function EmployeesClient({ canManage = false, isAdmin = false }) {
   const [employees, setEmployees] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [showRemove, setShowRemove] = useState(false);
   const [showAccess, setShowAccess] = useState(false);
-  const [canManage, setCanManage] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   const fetchEmployees = useCallback(async () => {
     setLoading(true);
@@ -36,15 +34,6 @@ export function EmployeesClient() {
   useEffect(() => {
     fetchEmployees();
   }, [fetchEmployees]);
-
-  useEffect(() => {
-    fetch("/api/employees/meta")
-      .then((r) => r.json())
-      .then((j) => {
-        setCanManage(!!j.data?.canManageEmployees);
-        setIsAdmin(!!j.data?.isAdmin);
-      });
-  }, []);
 
   const showMoreMenu = canManage || isAdmin;
 
@@ -133,6 +122,14 @@ export function EmployeesClient() {
                         <div className="mt-2 flex flex-wrap gap-2">
                           <Badge variant="secondary">{emp.department?.name || "—"}</Badge>
                           <Badge variant="outline">{emp.designation?.title || "—"}</Badge>
+                          {emp.gender && (
+                            <Badge variant="outline">
+                              {GENDER_LABELS[emp.gender] || emp.gender}
+                            </Badge>
+                          )}
+                          {!emp.gender && (
+                            <Badge variant="warning">Gender not set</Badge>
+                          )}
                           {emp.user?.role && (
                             <Badge variant="outline">
                               {ROLE_LABELS[emp.user.role] || emp.user.role}

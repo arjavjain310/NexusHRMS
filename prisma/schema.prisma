@@ -39,6 +39,12 @@ enum LeaveType {
   UNPAID
 }
 
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
 enum AttendanceStatus {
   PRESENT
   ABSENT
@@ -115,6 +121,8 @@ model User {
   canManageEmployees     Boolean  @default(false)
   /// Admin can grant permission to post organization-wide announcements
   canPostAnnouncements   Boolean  @default(false)
+  /// Admin can grant permission to approve or reject leave requests
+  canApproveLeave        Boolean  @default(false)
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 
@@ -172,6 +180,7 @@ model Employee {
   phone          String?
   avatarUrl      String?
   dateOfBirth    DateTime?
+  gender         Gender?
   dateOfJoining  DateTime
   status         EmploymentStatus @default(ACTIVE)
   organizationId String

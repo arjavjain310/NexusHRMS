@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole } from "@prisma/client";
+import { PrismaClient, UserRole, Gender } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -119,6 +119,7 @@ async function main() {
       phone: "8472835345",
       city: "Bangalore",
       pan: "ARJAV4208M",
+      gender: Gender.MALE,
       isFounder: true,
     },
     {
@@ -129,6 +130,7 @@ async function main() {
       code: "EMP002",
       phone: "+91-9876543211",
       city: "Bangalore",
+      gender: Gender.FEMALE,
     },
     {
       email: "harshit@nexushrms.com",
@@ -138,6 +140,7 @@ async function main() {
       code: "EMP003",
       phone: "+91-9876543212",
       city: "Mumbai",
+      gender: Gender.MALE,
     },
     {
       email: "employee@nexushrms.com",
@@ -148,6 +151,7 @@ async function main() {
       phone: "+91-8472835345",
       city: "Bangalore",
       pan: "CKGPJ4208M",
+      gender: Gender.FEMALE,
       stipend: 15000,
     },
   ];
@@ -157,11 +161,15 @@ async function main() {
   for (const u of demoUsers) {
     const user = await prisma.user.upsert({
       where: { email: u.email },
-      update: { role: u.role },
+      update: {
+        role: u.role,
+        ...(u.role !== UserRole.ADMIN ? { canManageEmployees: false } : {}),
+      },
       create: {
         email: u.email,
         role: u.role,
         organizationId: org.id,
+        canManageEmployees: false,
       },
     });
 
@@ -186,6 +194,7 @@ async function main() {
       update: {
         firstName: u.firstName,
         lastName: u.lastName,
+        gender: u.gender,
         phone: u.phone,
         city: u.city,
         country: "India",
@@ -212,6 +221,7 @@ async function main() {
         firstName: u.firstName,
         lastName: u.lastName,
         email: u.email,
+        gender: u.gender,
         phone: u.phone,
         city: u.city,
         country: "India",
@@ -303,6 +313,11 @@ async function main() {
       });
     }
   }
+
+  await prisma.user.updateMany({
+    where: { organizationId: org.id, role: { not: UserRole.ADMIN } },
+    data: { canManageEmployees: false },
+  });
 
   const holidays2026 = [
     { name: "New Year's Day", date: new Date("2026-01-01"), isOptional: false },

@@ -1,5 +1,6 @@
 import { differenceInCalendarDays } from "date-fns";
 import { prisma } from "@/lib/prisma";
+import { getEligibleLeaveTypes } from "@/lib/leave-eligibility";
 
 export const LEAVE_ENTITLEMENTS = {
   ANNUAL: 20,
@@ -14,7 +15,8 @@ function daysInclusive(start, end) {
   return differenceInCalendarDays(new Date(end), new Date(start)) + 1;
 }
 
-export async function getLeaveBalances(employeeId) {
+export async function getLeaveBalances(employeeId, gender = null) {
+  const eligibleTypes = getEligibleLeaveTypes(gender);
   const yearStart = new Date(new Date().getFullYear(), 0, 1);
   const approved = await prisma.leaveRequest.findMany({
     where: {
@@ -42,16 +44,18 @@ export async function getLeaveBalances(employeeId) {
     pendingDays[leave.type] = (pendingDays[leave.type] || 0) + days;
   }
 
-  return Object.entries(LEAVE_ENTITLEMENTS).map(([type, entitlement]) => {
-    const usedCount = used[type] || 0;
-    const pendingCount = pendingDays[type] || 0;
-    const remaining = Math.max(0, entitlement - usedCount - pendingCount);
-    return {
-      type,
-      entitlement,
-      used: usedCount,
-      pending: pendingCount,
-      remaining,
-    };
-  });
+  return Object.entries(LEAVE_ENTITLEMENTS)
+    .filter(([type]) => eligibleTypes.includes(type))
+    .map(([type, entitlement]) => {
+      const usedCount = used[type] || 0;
+      const pendingCount = pendingDays[type] || 0;
+      const remaining = Math.max(0, entitlement - usedCount - pendingCount);
+      return {
+        type,
+        entitlement,
+        used: usedCount,
+        pending: pendingCount,
+        remaining,
+      };
+    });
 }

@@ -14,13 +14,13 @@ export function AnnouncementAccessSettings() {
         <CardHeader>
           <CardTitle>Organization announcements</CardTitle>
           <CardDescription>
-            Control who can post company-wide messages visible in Recent activity
+            Control who can post organization-wide announcements
           </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">
             Admins can always post announcements. Grant posting access to HR managers, team leads, or
-            other trusted employees from the dashboard or here.
+            other trusted employees here.
           </p>
           <Button type="button" variant="outline" onClick={() => setOpen(true)}>
             Manage announcement access

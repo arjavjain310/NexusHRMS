@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/auth/permissions";
+import { canApproveLeave } from "@/lib/auth/leave-approval";
 import { LeaveManagementClient } from "@/components/modules/leave-management-client";
 
 export default async function LeaveManagementPage() {
@@ -9,7 +10,5 @@ export default async function LeaveManagementPage() {
     redirect("/dashboard");
   }
 
-  const canApprove = hasPermission(session.role, "approveLeave");
-
-  return <LeaveManagementClient canApprove={canApprove} />;
+  return <LeaveManagementClient canApprove={canApproveLeave(session)} />;
 }

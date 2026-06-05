@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
 import { canManageEmployees } from "@/lib/auth/employee-management";
+import { parseGender } from "@/lib/leave-eligibility";
 
 const VALID_ROLES = ["ADMIN", "SENIOR_MANAGER", "HR_RECRUITER", "EMPLOYEE"];
 const VALID_STATUSES = ["ACTIVE", "ON_LEAVE", "TERMINATED", "PROBATION"];
@@ -57,15 +58,24 @@ export async function POST(request) {
   const lastName = body.lastName?.trim();
   const employeeCode = body.employeeCode?.trim();
 
-  if (!normalizedEmail || !firstName || !lastName || !employeeCode) {
+  const gender = parseGender(body.gender);
+
+  if (!normalizedEmail || !firstName || !lastName || !employeeCode || !gender) {
     return NextResponse.json(
-      { error: "First name, last name, work email, and employee code are required." },
+      {
+        error:
+          "First name, last name, work email, employee code, and gender are required.",
+      },
       { status: 400 }
     );
   }
 
   const role = VALID_ROLES.includes(body.role) ? body.role : "EMPLOYEE";
   const status = VALID_STATUSES.includes(body.status) ? body.status : "ACTIVE";
+
+  if (role === "ADMIN" && session.role !== "ADMIN") {
+    return NextResponse.json({ error: "Only administrators can create admin accounts." }, { status: 403 });
+  }
 
   try {
     const existingUser = await prisma.user.findFirst({
@@ -127,6 +137,7 @@ export async function POST(request) {
           email: normalizedEmail,
           role,
           organizationId: orgId,
+          canManageEmployees: false,
         },
       });
 
@@ -136,6 +147,7 @@ export async function POST(request) {
           firstName,
           lastName,
           email: normalizedEmail,
+          gender,
           phone: body.phone?.trim() || null,
           city: body.city?.trim() || null,
           country: body.country?.trim() || "India",

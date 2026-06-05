@@ -33,12 +33,21 @@ export async function logActivity(
   }
 }
 
-/** Notify admins and senior managers in the organization */
+/** Notify admins about a new leave request */
+export async function notifyLeaveApprovers(organizationId, payload) {
+  const admins = await prisma.user.findMany({
+    where: { organizationId, role: "ADMIN" },
+    select: { id: true },
+  });
+  await Promise.all(admins.map((u) => createNotification({ userId: u.id, ...payload })));
+}
+
+/** Notify admins and senior managers (attendance corrections, etc.) */
 export async function notifyApprovers(organizationId, payload) {
   const approvers = await prisma.user.findMany({
     where: {
       organizationId,
-      role: { in: ["ADMIN", "SENIOR_MANAGER", "HR_RECRUITER"] },
+      role: { in: ["ADMIN", "SENIOR_MANAGER"] },
     },
     select: { id: true },
   });

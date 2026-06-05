@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
 import { canManageEmployees } from "@/lib/auth/employee-management";
+import { parseGender } from "@/lib/leave-eligibility";
 import { getAttendanceDayRange, serializeAttendanceRecord } from "@/lib/attendance";
 export async function GET(_request, {
   params
@@ -122,11 +123,36 @@ export async function PATCH(request, {
     });
   }
   const allowedSelf = ["phone", "address", "city", "bio", "education"];
-  const allowedAdmin = [...allowedSelf, "firstName", "lastName", "departmentId", "designationId", "managerId", "status", "panNumber", "uan", "pfNumber", "paymentMode", "businessUnit", "subDepartment"];
+  const allowedAdmin = [
+    ...allowedSelf,
+    "firstName",
+    "lastName",
+    "gender",
+    "departmentId",
+    "designationId",
+    "managerId",
+    "status",
+    "panNumber",
+    "uan",
+    "pfNumber",
+    "paymentMode",
+    "businessUnit",
+    "subDepartment",
+  ];
   const keys = isSelf ? allowedSelf : allowedAdmin;
   const data = {};
   for (const key of keys) {
     if (key in body) data[key] = body[key];
+  }
+  if ("gender" in data) {
+    const gender = parseGender(data.gender);
+    if (!gender) {
+      return NextResponse.json(
+        { error: "Gender must be Male, Female, or Other." },
+        { status: 400 }
+      );
+    }
+    data.gender = gender;
   }
   try {
     const employee = await prisma.employee.update({
