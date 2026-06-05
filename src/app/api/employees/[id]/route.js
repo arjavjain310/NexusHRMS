@@ -5,6 +5,7 @@ import {
   canManageEmployees,
   canModifyEmployeeRecord,
   getEditableEmployeeFields,
+  isOrgAdmin,
 } from "@/lib/auth/employee-management";
 import { parseGender } from "@/lib/leave-eligibility";
 import { purgeEmployeeCompletely } from "@/lib/employees/purge";
@@ -166,16 +167,8 @@ export async function PATCH(request, {
   }
 
   const VALID_ROLES = ["ADMIN", "SENIOR_MANAGER", "HR_RECRUITER", "EMPLOYEE"];
-  const roleUpdate = body.role && VALID_ROLES.includes(body.role) ? body.role : null;
-
-  if (roleUpdate) {
-    if (isSelf || !canManage) {
-      return NextResponse.json(
-        { error: "Only administrators or users with employee-management access can change roles." },
-        { status: 403 }
-      );
-    }
-  }
+  const roleInBody =
+    body.role && VALID_ROLES.includes(body.role) ? body.role : null;
 
   let baseSalaryUpdate = null;
   if (canManage && allowedKeys.includes("baseSalary")) {
@@ -204,8 +197,26 @@ export async function PATCH(request, {
       return NextResponse.json({ error: "Employee not found" }, { status: 404 });
     }
 
-    if (roleUpdate && !isSelf && canManage && existing.userId) {
-      if (roleUpdate === "ADMIN" && session.role !== "ADMIN") {
+    const roleUpdate =
+      roleInBody && roleInBody !== existing.user?.role ? roleInBody : null;
+
+    if (roleUpdate) {
+      if (!canManage) {
+        return NextResponse.json(
+          {
+            error:
+              "Only administrators or users with employee-management access can change roles.",
+          },
+          { status: 403 }
+        );
+      }
+      if (isSelf && !isOrgAdmin(session.role)) {
+        return NextResponse.json(
+          { error: "You cannot change your own system role." },
+          { status: 403 }
+        );
+      }
+      if (roleUpdate === "ADMIN" && !isOrgAdmin(session.role)) {
         return NextResponse.json(
           { error: "Only administrators can assign the admin role." },
           { status: 403 }
@@ -317,7 +328,7 @@ export async function PATCH(request, {
     }
 
     const employee = await prisma.$transaction(async (tx) => {
-      if (roleUpdate && !isSelf && canManage && existing.userId) {
+      if (roleUpdate && canManage && existing.userId) {
         await tx.user.update({
           where: { id: existing.userId },
           data: { role: roleUpdate },
