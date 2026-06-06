@@ -157,9 +157,3 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 | Employee | employee@nexushrms.com |
 
 **Deploy:** Push to GitHub, import on Vercel, set env vars from `.env.example`, then run `npx prisma db push` and `npm run db:seed` against your Neon database once.
-
----
-
-## License
-
-MIT
