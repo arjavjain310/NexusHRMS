@@ -133,8 +133,19 @@ export async function PATCH(request) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
 
+      const existingCorrection = await prisma.attendanceCorrection.findFirst({
+        where: {
+          id,
+          employee: { organizationId: session.organizationId },
+        },
+        include: { employee: true },
+      });
+      if (!existingCorrection) {
+        return NextResponse.json({ error: "Not found" }, { status: 404 });
+      }
+
       const correction = await prisma.attendanceCorrection.update({
-        where: { id },
+        where: { id: existingCorrection.id },
         data: {
           status,
           reviewedById: session.id,

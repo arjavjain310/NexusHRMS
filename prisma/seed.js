@@ -1,5 +1,4 @@
 import { PrismaClient, UserRole, Gender } from "@prisma/client";
-import { ensureAllDemoAccounts } from "../src/lib/auth/demo-accounts.js";
 
 const prisma = new PrismaClient();
 
@@ -499,8 +498,8 @@ async function main() {
     }
   }
 
-  await ensureAllDemoAccounts(prisma);
   console.log("Seed completed for", org.name);
+  console.log("Run `npm run db:seed-sandbox` to initialize the isolated demo sandbox org.");
 }
 
 main()
