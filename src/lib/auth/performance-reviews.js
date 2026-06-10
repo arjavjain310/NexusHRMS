@@ -1,4 +1,5 @@
 import { averageRatingToOneDecimal } from "@/lib/performance/rating";
+import { isDemoAccountUser } from "@/lib/auth/demo-accounts";
 
 /** Admin and Senior Manager may submit reviews; others need an explicit admin grant. */
 export function canSubmitPerformanceReviews(session) {
@@ -11,13 +12,16 @@ export function canGrantPerformanceReviewAccess(session) {
   return session?.role === "ADMIN";
 }
 
-/** Organization administrators are excluded from the review workflow. */
-export function isReviewSubjectExcluded(userRole) {
-  return userRole === "ADMIN";
+/** Demo system accounts and org admins are excluded from the review workflow. */
+export function isReviewSubjectExcluded(user) {
+  if (!user) return false;
+  if (isDemoAccountUser(user)) return true;
+  return user.role === "ADMIN";
 }
 
 export function isAdminPerformanceProfile(session) {
-  return session?.role === "ADMIN";
+  if (session?.isDemoSession && session?.demoRoleKey === "admin") return true;
+  return session?.role === "ADMIN" && !session?.isDemoSession;
 }
 
 /** Personal avg rating display for the performance page stat card. */

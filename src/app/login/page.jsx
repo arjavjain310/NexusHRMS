@@ -1,21 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { DEMO_CREDENTIALS, DEMO_MODE_PASSWORD, IS_DEMO_MODE } from "@/lib/constants";
+import { IS_DEMO_LOGIN_ENABLED } from "@/lib/constants";
+import { QUICK_DEMO_ROLES } from "@/lib/constants/demo-roles";
 import { Logo } from "@/components/brand/logo";
+import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [demoLoadingKey, setDemoLoadingKey] = useState(null);
+  const [demoEnabled, setDemoEnabled] = useState(IS_DEMO_LOGIN_ENABLED);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (IS_DEMO_LOGIN_ENABLED) return;
+    fetch("/api/auth/demo-login")
+      .then((r) => r.json())
+      .then((j) => setDemoEnabled(!!j.enabled))
+      .catch(() => setDemoEnabled(false));
+  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -40,10 +53,28 @@ export default function LoginPage() {
     router.refresh();
   }
 
-  function quickLogin(demoEmail) {
-    setEmail(demoEmail);
-    setPassword(DEMO_MODE_PASSWORD);
+  async function handleDemoLogin(roleKey) {
+    setDemoLoadingKey(roleKey);
+    setError("");
+
+    const res = await fetch("/api/auth/demo-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role: roleKey }),
+    });
+    const data = await res.json();
+    setDemoLoadingKey(null);
+
+    if (!res.ok) {
+      setError(data.error || "Demo login failed");
+      return;
+    }
+
+    router.push("/dashboard");
+    router.refresh();
   }
+
+  const anyDemoLoading = demoLoadingKey !== null;
 
   return (
     <div className="flex min-h-screen">
@@ -64,12 +95,67 @@ export default function LoginPage() {
       </div>
 
       <div className="flex flex-1 items-center justify-center p-6">
-        <Card className="w-full max-w-md border-0 shadow-none lg:border lg:shadow-card">
+        <Card className="w-full max-w-lg border-0 shadow-none lg:border lg:shadow-card">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl">Hello User,</CardTitle>
             <CardDescription>Sign in to your workspace</CardDescription>
           </CardHeader>
           <CardContent>
+            {demoEnabled && (
+              <div className="mb-6 space-y-3">
+                <div>
+                  <p className="text-sm font-semibold">Quick Demo Accounts</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Explore the complete HRMS without creating an account.
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {QUICK_DEMO_ROLES.map((role) => {
+                    const isLoading = demoLoadingKey === role.key;
+                    return (
+                      <button
+                        key={role.key}
+                        type="button"
+                        disabled={loading || anyDemoLoading}
+                        onClick={() => handleDemoLogin(role.key)}
+                        className={cn(
+                          "flex flex-col items-start gap-1 rounded-lg border p-3 text-left transition-all",
+                          "disabled:opacity-60 disabled:cursor-not-allowed",
+                          role.colorClass
+                        )}
+                      >
+                        <span className="flex items-center gap-2 text-sm font-semibold w-full">
+                          <span className={cn("h-2 w-2 rounded-full shrink-0", role.dotClass)} />
+                          {isLoading ? (
+                            <>
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              Signing in…
+                            </>
+                          ) : (
+                            role.label
+                          )}
+                        </span>
+                        {!isLoading && (
+                          <span className="text-xs opacity-80 pl-4">{role.description}</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {demoEnabled && (
+              <div className="relative mb-6">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">or sign in with email</span>
+                </div>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -93,32 +179,10 @@ export default function LoginPage() {
                 />
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="w-full" disabled={loading || anyDemoLoading}>
                 {loading ? "Signing in..." : "Sign in"}
               </Button>
             </form>
-
-            {IS_DEMO_MODE && (
-              <div className="mt-6">
-                <p className="text-xs text-muted-foreground mb-3">
-                  Demo accounts (local demo password only)
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  {DEMO_CREDENTIALS.map((c) => (
-                    <Button
-                      key={c.email}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="text-xs justify-start truncate"
-                      onClick={() => quickLogin(c.email)}
-                    >
-                      {c.role.replace("_", " ")}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            )}
 
             <p className="mt-6 text-center text-sm text-muted-foreground">
               <Link href="/signup" className="text-primary hover:underline">

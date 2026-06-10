@@ -32,7 +32,7 @@ export async function PATCH(request, { params }) {
       },
       include: {
         employee: {
-          include: { user: { select: { role: true } } },
+          include: { user: { select: { role: true, isDemoAccount: true, email: true } } },
         },
       },
     });
@@ -41,7 +41,7 @@ export async function PATCH(request, { params }) {
       return NextResponse.json({ error: "Review not found" }, { status: 404 });
     }
 
-    if (isReviewSubjectExcluded(existing.employee.user?.role)) {
+    if (isReviewSubjectExcluded(existing.employee.user)) {
       return NextResponse.json(
         { error: "Administrator accounts cannot receive performance reviews." },
         { status: 400 }

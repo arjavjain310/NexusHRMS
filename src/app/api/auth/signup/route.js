@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { isDemoMode, isSupabaseAuthEnabled } from "@/lib/auth/mode";
+import { getDemoSignupBlockedMessage } from "@/lib/auth/demo-guards";
 
 export async function POST(request) {
   if (isDemoMode()) {
@@ -27,6 +28,11 @@ export async function POST(request) {
 
   if (password.length < 8) {
     return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
+  }
+
+  const demoSignupBlock = getDemoSignupBlockedMessage(normalizedEmail);
+  if (demoSignupBlock) {
+    return NextResponse.json({ error: demoSignupBlock }, { status: 403 });
   }
 
   try {

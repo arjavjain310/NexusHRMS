@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { prisma } from "@/lib/prisma";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { isDemoMode } from "@/lib/auth/mode";
+import { getDemoPasswordResetBlockedMessage } from "@/lib/auth/demo-guards";
 
 export async function POST(request) {
   const { email, currentPassword, newPassword, confirmPassword } = await request.json();
@@ -31,6 +32,11 @@ export async function POST(request) {
       { error: "New password must be different from your current password." },
       { status: 400 }
     );
+  }
+
+  const demoResetBlock = getDemoPasswordResetBlockedMessage(normalizedEmail);
+  if (demoResetBlock) {
+    return NextResponse.json({ error: demoResetBlock }, { status: 403 });
   }
 
   try {

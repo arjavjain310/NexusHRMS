@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Sidebar } from "./sidebar";
 import { Header } from "./header";
+import { DemoModeBanner } from "./demo-mode-banner";
 import { cn } from "@/lib/utils";
 
 
@@ -33,6 +34,7 @@ export function DashboardShell({ user, children }) {
 
       <div className="flex flex-1 flex-col overflow-hidden min-w-0">
         <Header user={user} onMenuClick={() => setMobileOpen(true)} />
+        {user.isDemoSession && <DemoModeBanner />}
         <main className="flex-1 overflow-y-auto p-4 lg:p-8">{children}</main>
       </div>
     </div>

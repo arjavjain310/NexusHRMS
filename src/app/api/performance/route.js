@@ -126,14 +126,14 @@ export async function POST(request) {
   try {
     const employee = await prisma.employee.findFirst({
       where: { id: employeeId, organizationId: session.organizationId },
-      include: { user: { select: { role: true } } },
+      include: { user: { select: { role: true, isDemoAccount: true, email: true } } },
     });
 
     if (!employee) {
       return NextResponse.json({ error: "Employee not found" }, { status: 404 });
     }
 
-    if (isReviewSubjectExcluded(employee.user?.role)) {
+    if (isReviewSubjectExcluded(employee.user)) {
       return NextResponse.json(
         { error: "Administrator accounts cannot receive performance reviews." },
         { status: 400 }

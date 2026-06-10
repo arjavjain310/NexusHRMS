@@ -125,6 +125,8 @@ model User {
   canApproveLeave        Boolean  @default(false)
   /// Admin can grant permission to submit employee performance reviews
   canSubmitPerformanceReviews Boolean @default(false)
+  /// One-click demo login account — protected from deletion
+  isDemoAccount          Boolean  @default(false)
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 
@@ -346,6 +348,18 @@ model Goal {
   employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@index([employeeId])
+}
+
+model DemoSessionLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  email     String
+  ipAddress String?
+  userAgent String?  @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([email])
 }
 
 model PerformanceReview {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
 import { canGrantPerformanceReviewAccess } from "@/lib/auth/performance-reviews";
+import { getDemoSessionActionBlockedMessage } from "@/lib/auth/demo-guards";
 
 export async function GET() {
   const session = await getSession();
@@ -34,6 +35,10 @@ export async function PATCH(request) {
   const session = await getSession();
   if (!session || !canGrantPerformanceReviewAccess(session)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  const demoBlock = getDemoSessionActionBlockedMessage(session, "grant_access");
+  if (demoBlock) {
+    return NextResponse.json({ error: demoBlock }, { status: 403 });
   }
 
   const { userId, canSubmitPerformanceReviews } = await request.json();

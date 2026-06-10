@@ -14,6 +14,10 @@ import {
   validateRequiredBaseSalary,
 } from "@/lib/employees/salary";
 import { getAttendanceDayRange, serializeAttendanceRecord } from "@/lib/attendance";
+import {
+  getDemoDeleteBlockedMessage,
+  getDemoPatchBlockedMessage,
+} from "@/lib/auth/demo-guards";
 
 const VALID_STATUSES = ["ACTIVE", "ON_LEAVE", "TERMINATED", "PROBATION"];
 export async function GET(_request, {
@@ -195,6 +199,16 @@ export async function PATCH(request, {
     });
     if (!existing) {
       return NextResponse.json({ error: "Employee not found" }, { status: 404 });
+    }
+
+    const demoPatchBlock = getDemoPatchBlockedMessage(
+      session,
+      existing,
+      existing.user,
+      body
+    );
+    if (demoPatchBlock) {
+      return NextResponse.json({ error: demoPatchBlock }, { status: 403 });
     }
 
     const roleUpdate =
@@ -423,6 +437,11 @@ export async function DELETE(_request, { params }) {
 
     if (!employee) {
       return NextResponse.json({ error: "Employee not found" }, { status: 404 });
+    }
+
+    const demoDeleteBlock = getDemoDeleteBlockedMessage(session, employee, employee.user);
+    if (demoDeleteBlock) {
+      return NextResponse.json({ error: demoDeleteBlock }, { status: 403 });
     }
 
     if (employee.user?.role === "ADMIN") {

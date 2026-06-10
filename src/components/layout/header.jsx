@@ -7,12 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ThemeToggle } from "./theme-toggle";
 import { NotificationsMenu } from "./notifications-menu";
+import { Badge } from "@/components/ui/badge";
 import { ROLE_LABELS } from "@/lib/constants";
 import { getInitials } from "@/lib/utils";
-export function Header({
-  user,
-  onMenuClick
-}) {
+
+export function Header({ user, onMenuClick }) {
   const router = useRouter();
   const nameParts = user.name.split(" ") || ["User"];
   const firstName = nameParts[0] || "U";
@@ -35,6 +34,14 @@ export function Header({
       </div>
 
       <div className="ml-auto flex items-center gap-2">
+        {user.isDemoSession && (
+          <Badge
+            variant="secondary"
+            className="hidden sm:inline-flex bg-amber-500/15 text-amber-800 border-amber-300 dark:text-amber-200"
+          >
+            Demo Mode
+          </Badge>
+        )}
         <ThemeToggle />
         <NotificationsMenu />
 

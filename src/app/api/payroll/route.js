@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
 import { hasPermission } from "@/lib/auth/permissions";
+import { getDemoSessionActionBlockedMessage } from "@/lib/auth/demo-guards";
 import { buildPayslipFromStructure, serializePayslip } from "@/lib/payroll/payslip";
 
 const employeeInclude = {
@@ -232,6 +233,10 @@ export async function POST(request) {
     }, {
       status: 403
     });
+  }
+  const demoBlock = getDemoSessionActionBlockedMessage(session, "process_payroll");
+  if (demoBlock) {
+    return NextResponse.json({ error: demoBlock }, { status: 403 });
   }
   const {
     employeeId,

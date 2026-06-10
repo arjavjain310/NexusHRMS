@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
 import { canGrantEmployeeManagementAccess, isOrgAdmin } from "@/lib/auth/employee-management";
+import { getDemoSessionActionBlockedMessage } from "@/lib/auth/demo-guards";
 
 /** Admin: list who can add/remove employees; grant or revoke access */
 export async function GET() {
@@ -47,6 +48,10 @@ export async function POST() {
   if (!session || !canGrantEmployeeManagementAccess(session)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+  const demoBlock = getDemoSessionActionBlockedMessage(session, "grant_access");
+  if (demoBlock) {
+    return NextResponse.json({ error: demoBlock }, { status: 403 });
+  }
 
   try {
     const result = await prisma.user.updateMany({
@@ -76,6 +81,10 @@ export async function PATCH(request) {
   const session = await getSession();
   if (!session || !canGrantEmployeeManagementAccess(session)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  const demoBlock = getDemoSessionActionBlockedMessage(session, "grant_access");
+  if (demoBlock) {
+    return NextResponse.json({ error: demoBlock }, { status: 403 });
   }
 
   const { userId, canManageEmployees } = await request.json();

@@ -21,7 +21,7 @@ export async function GET() {
           where: {
             organizationId: session.organizationId,
             status: { not: "TERMINATED" },
-            OR: [{ user: null }, { user: { role: { not: "ADMIN" } } }],
+            user: { isDemoAccount: false, role: { not: "ADMIN" } },
           },
           orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
           select: {

@@ -147,7 +147,9 @@ DEMO_MODE=true
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-**Demo accounts** (password: `demo-local-only`):
+**Quick Demo Accounts:** enable `ENABLE_DEMO_LOGIN=true` and `NEXT_PUBLIC_ENABLE_DEMO_LOGIN=true`, then use **Admin / Manager / HR / Employee** on `/login` (no password).
+
+**Demo accounts** (password: `demo-local-only` when `DEMO_MODE=true`):
 
 | Role | Email |
 |------|-------|
@@ -155,5 +157,9 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 | Senior Manager | saakshi@nexushrms.com |
 | HR Recruiter | harshit@nexushrms.com |
 | Employee | employee@nexushrms.com |
+| Demo Admin | demo-admin@nexushrms.com |
+| Demo Manager | demo-manager@nexushrms.com |
+| Demo HR | demo-hr@nexushrms.com |
+| Demo Employee | demo-employee@nexushrms.com |
 
 **Deploy:** Push to GitHub, import on Vercel, set env vars from `.env.example`, then run `npx prisma db push` and `npm run db:seed` against your Neon database once.

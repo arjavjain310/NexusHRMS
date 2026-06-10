@@ -1,4 +1,5 @@
 import { PrismaClient, UserRole, Gender } from "@prisma/client";
+import { ensureAllDemoAccounts } from "../src/lib/auth/demo-accounts.js";
 
 const prisma = new PrismaClient();
 
@@ -498,6 +499,7 @@ async function main() {
     }
   }
 
+  await ensureAllDemoAccounts(prisma);
   console.log("Seed completed for", org.name);
 }
 
