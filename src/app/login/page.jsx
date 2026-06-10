@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { IS_DEMO_LOGIN_ENABLED } from "@/lib/constants";
 import { QUICK_DEMO_ROLES } from "@/lib/constants/demo-roles";
 import { Logo } from "@/components/brand/logo";
 import { Loader2 } from "lucide-react";
@@ -19,16 +18,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [demoLoadingKey, setDemoLoadingKey] = useState(null);
-  const [demoEnabled, setDemoEnabled] = useState(IS_DEMO_LOGIN_ENABLED);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    if (IS_DEMO_LOGIN_ENABLED) return;
-    fetch("/api/auth/demo-login")
-      .then((r) => r.json())
-      .then((j) => setDemoEnabled(!!j.enabled))
-      .catch(() => setDemoEnabled(false));
-  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -101,60 +91,56 @@ export default function LoginPage() {
             <CardDescription>Sign in to your workspace</CardDescription>
           </CardHeader>
           <CardContent>
-            {demoEnabled && (
-              <div className="mb-6 space-y-3">
-                <div>
-                  <p className="text-sm font-semibold">Quick Demo Accounts</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Explore the complete HRMS without creating an account.
-                  </p>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {QUICK_DEMO_ROLES.map((role) => {
-                    const isLoading = demoLoadingKey === role.key;
-                    return (
-                      <button
-                        key={role.key}
-                        type="button"
-                        disabled={loading || anyDemoLoading}
-                        onClick={() => handleDemoLogin(role.key)}
-                        className={cn(
-                          "flex flex-col items-start gap-1 rounded-lg border p-3 text-left transition-all",
-                          "disabled:opacity-60 disabled:cursor-not-allowed",
-                          role.colorClass
-                        )}
-                      >
-                        <span className="flex items-center gap-2 text-sm font-semibold w-full">
-                          <span className={cn("h-2 w-2 rounded-full shrink-0", role.dotClass)} />
-                          {isLoading ? (
-                            <>
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              Signing in…
-                            </>
-                          ) : (
-                            role.label
-                          )}
-                        </span>
-                        {!isLoading && (
-                          <span className="text-xs opacity-80 pl-4">{role.description}</span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+            <div className="mb-6 space-y-3">
+              <div>
+                <p className="text-sm font-semibold">Quick Demo Accounts</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Explore the complete HRMS without creating an account.
+                </p>
               </div>
-            )}
+              <div className="grid grid-cols-2 gap-2">
+                {QUICK_DEMO_ROLES.map((role) => {
+                  const isLoading = demoLoadingKey === role.key;
+                  return (
+                    <button
+                      key={role.key}
+                      type="button"
+                      disabled={loading || anyDemoLoading}
+                      onClick={() => handleDemoLogin(role.key)}
+                      className={cn(
+                        "flex flex-col items-start gap-1 rounded-lg border p-3 text-left transition-all",
+                        "disabled:opacity-60 disabled:cursor-not-allowed",
+                        role.colorClass
+                      )}
+                    >
+                      <span className="flex items-center gap-2 text-sm font-semibold w-full">
+                        <span className={cn("h-2 w-2 rounded-full shrink-0", role.dotClass)} />
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            Signing in…
+                          </>
+                        ) : (
+                          role.label
+                        )}
+                      </span>
+                      {!isLoading && (
+                        <span className="text-xs opacity-80 pl-4">{role.description}</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-            {demoEnabled && (
-              <div className="relative mb-6">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">or sign in with email</span>
-                </div>
+            <div className="relative mb-6">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
               </div>
-            )}
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">or sign in with email</span>
+              </div>
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">

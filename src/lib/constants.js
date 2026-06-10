@@ -9,10 +9,8 @@ export const BRAND_TITLE = process.env.NEXT_PUBLIC_BRAND_TITLE || "Nexus-HRMS";
 export const LOGO_SRC = "/logo.png";
 export const LOGO_ICON_SRC = "/favicon.png";
 
-/** Show one-click Demo Login on /login (local or when explicitly enabled). */
-export const IS_DEMO_LOGIN_ENABLED =
-  process.env.NEXT_PUBLIC_DEMO_MODE === "true" ||
-  process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === "true";
+/** Quick demo accounts are always shown on the login page. */
+export const SHOW_QUICK_DEMO_ACCOUNTS = true;
 
 /** Default currency for payroll and financial displays */
 export const DEFAULT_CURRENCY = "INR";
